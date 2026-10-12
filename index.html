@@ -391,6 +391,7 @@
         STATE.stream = stream;
         videoPreview.srcObject = stream;
         
+        // Comprehensive playback and health monitoring
         videoPreview.onloadedmetadata = () => {
           videoPreview.play().catch(e => console.warn('Play error:', e));
         };
@@ -402,6 +403,44 @@
             badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
           }
         };
+
+        // If the browser pauses the video, auto-resume immediately
+        videoPreview.onpause = () => {
+          console.warn('Video stream paused by browser, auto-resuming...');
+          if (STATE.stream) {
+            videoPreview.play().catch(() => {});
+          }
+        };
+
+        // Track ended handler (e.g. hardware dropped)
+        stream.getVideoTracks().forEach(track => {
+          track.onended = () => {
+            console.warn('Camera video track ended unexpectedly!');
+            const badgeDot = document.getElementById('camStatusDot');
+            const badgeText = document.getElementById('camStatusText');
+            if (badgeDot && badgeText) {
+              badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
+              badgeText.innerText = '鏡頭串流被系統中止 (Track Ended)';
+            }
+          };
+          track.onmute = () => {
+            console.warn('Camera video track muted by system/hardware!');
+            const badgeDot = document.getElementById('camStatusDot');
+            const badgeText = document.getElementById('camStatusText');
+            if (badgeDot && badgeText) {
+              badgeDot.className = 'w-2 h-2 rounded-full bg-yellow-500';
+              badgeText.innerText = '鏡頭無畫面輸出 (Muted/硬體節能中)';
+            }
+          };
+          track.onunmute = () => {
+            const badgeDot = document.getElementById('camStatusDot');
+            const badgeText = document.getElementById('camStatusText');
+            if (badgeDot && badgeText) {
+              badgeDot.className = 'w-2 h-2 rounded-full bg-green-400';
+              badgeText.innerText = `鏡頭恢復運作 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
+            }
+          };
+        });
 
         await videoPreview.play().catch(() => {});
         cameraNotice.classList.add('hidden');
