@@ -85,11 +85,11 @@
       <!-- Viewfinder (3:2 standard landscape ratio) -->
       <div class="relative w-full max-w-4xl bg-stone-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-200 aspect-[3/2] flex items-center justify-center">
         
-        <!-- Live Video Element -->
-        <video id="videoPreview" autoplay playsinline muted class="w-full h-full object-cover mirror-mode"></video>
+        <!-- Live Video Element (Positioned in background) -->
+        <video id="videoPreview" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover mirror-mode z-0"></video>
         
-        <!-- Live Fallback Demo Image (if camera is black or testing without camera) -->
-        <img id="demoPhotoPreview" class="w-full h-full object-cover mirror-mode hidden" alt="示範相片">
+        <!-- Live Fallback Demo Image -->
+        <img id="demoPhotoPreview" class="absolute inset-0 w-full h-full object-cover mirror-mode z-0 hidden" alt="示範相片">
 
         <!-- Active Frame Overlay on Live Preview -->
         <img id="liveFrameOverlay" src="frames/frame_flower_garden.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
@@ -360,27 +360,39 @@
 
     // --- Initialize Camera Stream ---
     async function initCamera() {
-      if (STATE.stream) {
-        STATE.stream.getTracks().forEach(t => t.stop());
-      }
       try {
-        const constraints = {
-          audio: false,
-          video: {
-            facingMode: STATE.facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
+        if (STATE.stream) {
+          STATE.stream.getTracks().forEach(t => t.stop());
+          STATE.stream = null;
+        }
+
+        let stream = null;
+        // Progressive constraint fallback to avoid NotReadableError on Windows / iPad
+        const tryConstraints = [
+          { video: { facingMode: STATE.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } },
+          { video: { facingMode: STATE.facingMode } },
+          { video: true }
+        ];
+
+        let lastError = null;
+        for (const c of tryConstraints) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(c);
+            if (stream) break;
+          } catch (e) {
+            lastError = e;
           }
-        };
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        }
+
+        if (!stream) {
+          throw lastError || new Error('無法存取任何視訊串流');
+        }
+
         STATE.stream = stream;
         videoPreview.srcObject = stream;
         
-        // Ensure video plays properly across all browsers (iPad Safari / Chrome)
         videoPreview.onloadedmetadata = () => {
-          videoPreview.play().catch(e => {
-            console.warn('Autoplay error, waiting for interaction:', e);
-          });
+          videoPreview.play().catch(e => console.warn('Play error:', e));
         };
         videoPreview.onplaying = () => {
           const badgeDot = document.getElementById('camStatusDot');
@@ -390,11 +402,8 @@
             badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
           }
         };
-        // Also call play directly
-        videoPreview.play().catch(e => {
-          console.warn('Direct play error:', e);
-        });
 
+        await videoPreview.play().catch(() => {});
         cameraNotice.classList.add('hidden');
       } catch (err) {
         console.error('Camera access failed:', err);
@@ -408,7 +417,7 @@
         cameraNotice.innerHTML = `
           <span class="text-5xl mb-4">⚠️</span>
           <p class="text-lg md:text-xl font-bold mb-2">相機無法啟動</p>
-          <p class="text-sm text-stone-300 max-w-md mb-6">${err.name || '無法存取鏡頭'}：請確認已允許瀏覽器相機權限，且鏡頭未被其他應用程式（如 Teams/Line/Zoom/實體鏡頭防窺蓋）佔用。</p>
+          <p class="text-sm text-stone-300 max-w-md mb-6">${err.name || '無法存取鏡頭'}：請關閉其他使用鏡頭的分頁或軟體，點擊下方重新啟動；或使用上傳照片測試。</p>
           <div class="flex flex-wrap gap-3 justify-center">
             <button id="btnRetryCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg">重新嘗試啟動</button>
             <label class="bg-stone-700 hover:bg-stone-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg cursor-pointer">
@@ -450,7 +459,8 @@
 
     // --- Frame Switching ---
     document.querySelectorAll('.frame-thumb-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
         document.querySelectorAll('.frame-thumb-btn').forEach(b => {
           b.classList.remove('border-amber-500');
           b.classList.add('border-transparent');
@@ -461,7 +471,11 @@
         const frameSrc = btn.getAttribute('data-frame');
         STATE.selectedFrame = frameSrc;
         liveFrameOverlay.src = frameSrc;
-        playBeep(450, 0.08);
+
+        // Ensure video playback is never paused when clicking UI
+        if (videoPreview.paused && STATE.stream) {
+          videoPreview.play().catch(() => {});
+        }
       });
     });
 
