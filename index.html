@@ -88,6 +88,9 @@
         <!-- Live Video Element -->
         <video id="videoPreview" autoplay playsinline muted class="w-full h-full object-cover mirror-mode"></video>
         
+        <!-- Live Fallback Demo Image (if camera is black or testing without camera) -->
+        <img id="demoPhotoPreview" class="w-full h-full object-cover mirror-mode hidden" alt="示範相片">
+
         <!-- Active Frame Overlay on Live Preview -->
         <img id="liveFrameOverlay" src="frames/frame_flower_garden.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
         
@@ -96,12 +99,24 @@
           <span id="countdownText" class="text-9xl md:text-[14rem] font-black text-amber-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] animate-ping">3</span>
         </div>
 
+        <!-- Camera Status Indicator Badge -->
+        <div id="cameraStatusBadge" class="absolute top-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full z-20 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" id="camStatusDot"></span>
+          <span id="camStatusText">鏡頭連接中...</span>
+        </div>
+
         <!-- Camera Off / Permission Notice -->
         <div id="cameraNotice" class="absolute inset-0 bg-stone-800 text-white flex flex-col items-center justify-center p-6 text-center z-20 hidden">
           <span class="text-5xl mb-4">📷</span>
           <p class="text-lg md:text-xl font-bold mb-2">請允許瀏覽器使用相機權限</p>
           <p class="text-sm text-stone-300 max-w-md mb-6">點擊下方按鈕以啟用 iPad / 平板鏡頭開始拍照。</p>
-          <button id="btnRequestCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold px-6 py-3 rounded-2xl shadow-lg">啟動相機</button>
+          <div class="flex flex-wrap gap-3 justify-center">
+            <button id="btnRequestCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg">啟動相機</button>
+            <label class="bg-stone-700 hover:bg-stone-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg cursor-pointer">
+              上傳照片測試
+              <input type="file" id="inputTestPhoto" accept="image/*" class="hidden">
+            </label>
+          </div>
         </div>
       </div>
 
@@ -266,14 +281,14 @@
       capturedDataUrl: null,
       autoResetTimer: null,
       imgbbApiKey: localStorage.getItem('imgbb_api_key') || '',
-      // Relative hole geometry calculated for frames [minX, maxX, minY, maxY]
-      // frame_flower_garden: 252x179, inner hole [42..211, 55..147]
-      // frame_chalkboard: 252x179, inner hole [39..213, 54..150]
-      // frame_blue_ocean: 328x151, inner hole [59..278, 40..130]
+      // Precise hole geometry measured at 1800 x 1200 HD resolution
+      // frame_flower_garden: x=[303, 1511], y=[370, 990]
+      // frame_chalkboard:     x=[277, 1526], y=[364, 1008]
+      // frame_blue_ocean:     x=[326, 1529], y=[316, 1044]
       frameHoles: {
-        'frames/frame_flower_garden.png': { rx: 42/252, rw: (211-42+1)/252, ry: 55/179, rh: (147-55+1)/179 },
-        'frames/frame_chalkboard.png':     { rx: 39/252, rw: (213-39+1)/252, ry: 54/179, rh: (150-54+1)/179 },
-        'frames/frame_blue_ocean.png':     { rx: 59/328, rw: (278-59+1)/328, ry: 40/151, rh: (130-40+1)/151 }
+        'frames/frame_flower_garden.png': { rx: 303/1800, rw: 1209/1800, ry: 370/1200, rh: 621/1200 },
+        'frames/frame_chalkboard.png':     { rx: 277/1800, rw: 1250/1800, ry: 364/1200, rh: 645/1200 },
+        'frames/frame_blue_ocean.png':     { rx: 326/1800, rw: 1204/1800, ry: 316/1200, rh: 729/1200 }
       }
     };
 
@@ -360,11 +375,77 @@
         const stream = await navigator.mediaDevices.getUserMedia(constraints);
         STATE.stream = stream;
         videoPreview.srcObject = stream;
+        
+        // Ensure video plays properly across all browsers (iPad Safari / Chrome)
+        videoPreview.onloadedmetadata = () => {
+          videoPreview.play().catch(e => {
+            console.warn('Autoplay error, waiting for interaction:', e);
+          });
+        };
+        videoPreview.onplaying = () => {
+          const badgeDot = document.getElementById('camStatusDot');
+          const badgeText = document.getElementById('camStatusText');
+          if (badgeDot && badgeText) {
+            badgeDot.className = 'w-2 h-2 rounded-full bg-green-400';
+            badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
+          }
+        };
+        // Also call play directly
+        videoPreview.play().catch(e => {
+          console.warn('Direct play error:', e);
+        });
+
         cameraNotice.classList.add('hidden');
       } catch (err) {
         console.error('Camera access failed:', err);
+        const badgeDot = document.getElementById('camStatusDot');
+        const badgeText = document.getElementById('camStatusText');
+        if (badgeDot && badgeText) {
+          badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
+          badgeText.innerText = '鏡頭未啟動或被佔用';
+        }
         cameraNotice.classList.remove('hidden');
+        cameraNotice.innerHTML = `
+          <span class="text-5xl mb-4">⚠️</span>
+          <p class="text-lg md:text-xl font-bold mb-2">相機無法啟動</p>
+          <p class="text-sm text-stone-300 max-w-md mb-6">${err.name || '無法存取鏡頭'}：請確認已允許瀏覽器相機權限，且鏡頭未被其他應用程式（如 Teams/Line/Zoom/實體鏡頭防窺蓋）佔用。</p>
+          <div class="flex flex-wrap gap-3 justify-center">
+            <button id="btnRetryCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg">重新嘗試啟動</button>
+            <label class="bg-stone-700 hover:bg-stone-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg cursor-pointer">
+              上傳照片測試
+              <input type="file" id="inputTestPhoto" accept="image/*" class="hidden">
+            </label>
+          </div>
+        `;
+        document.getElementById('btnRetryCamera')?.addEventListener('click', initCamera);
+        bindTestPhotoUpload();
       }
+    }
+
+    // Support testing photo without webcam
+    function bindTestPhotoUpload() {
+      const input = document.getElementById('inputTestPhoto');
+      if (!input) return;
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const demoImg = document.getElementById('demoPhotoPreview');
+          demoImg.src = ev.target.result;
+          demoImg.classList.remove('hidden');
+          videoPreview.classList.add('hidden');
+          cameraNotice.classList.add('hidden');
+          STATE.demoImage = demoImg;
+          const badgeDot = document.getElementById('camStatusDot');
+          const badgeText = document.getElementById('camStatusText');
+          if (badgeDot && badgeText) {
+            badgeDot.className = 'w-2 h-2 rounded-full bg-blue-400';
+            badgeText.innerText = '使用上傳照片測試';
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
 
     // --- Frame Switching ---
@@ -448,9 +529,10 @@
       const holeW = hole.rw * cw;
       const holeH = hole.rh * ch;
 
-      // Draw camera frame into the hole area with cover/aspect ratio fitting
-      const vw = videoPreview.videoWidth || 1920;
-      const vh = videoPreview.videoHeight || 1080;
+      // Draw camera frame or demo photo into the hole area with cover/aspect ratio fitting
+      const sourceEl = STATE.demoImage || videoPreview;
+      const vw = sourceEl.videoWidth || sourceEl.naturalWidth || 1920;
+      const vh = sourceEl.videoHeight || sourceEl.naturalHeight || 1080;
       
       ctx.save();
       // Clip to hole rectangle (with small bleed to avoid gaps)
@@ -468,9 +550,9 @@
       if (STATE.isMirror) {
         ctx.translate(drawX + drawW, drawY);
         ctx.scale(-1, 1);
-        ctx.drawImage(videoPreview, 0, 0, drawW, drawH);
+        ctx.drawImage(sourceEl, 0, 0, drawW, drawH);
       } else {
-        ctx.drawImage(videoPreview, drawX, drawY, drawW, drawH);
+        ctx.drawImage(sourceEl, drawX, drawY, drawW, drawH);
       }
       ctx.restore();
 
