@@ -5,7 +5,7 @@
 - 專案用途：供結業典禮現場長輩、學員使用 iPad / 平板拍照留念，支援倒數計時、3 款主題相框選擇、4x6 吋高畫質合成，並產生 QR Code 供家屬手機下載電子相片。
 - 主要工作目錄：`d:\Work\拍貼機`
 - 部署目標：GitHub Pages (靜態前端)
-- 雲端圖床：ImgBB API / 免費圖床 API (供手機掃描 QR Code 下載)
+- 雲端圖床：Cloudinary (美國加州雲端媒體服務，Unsigned Upload Preset 模式)
 - 預設 branch：`main`
 
 ## 技術架構決策
