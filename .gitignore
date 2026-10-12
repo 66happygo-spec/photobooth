@@ -1,0 +1,16 @@
+# OS & Editor Files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Environment & Secret keys
+.env
+.env.local
+config.local.js
+
+# Temporary files
+*.tmp
+*.log
+scratch/

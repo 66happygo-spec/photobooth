@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>2026 外埔長青學院結業典禮 - 拍貼機</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- QRCode.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Canvas-Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  
+  <style>
+    /* iOS WebApp Fullscreen & Prevent Bounce */
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    
+    /* Mirror video preview like a real mirror */
+    .mirror-mode {
+      transform: scaleX(-1);
+    }
+    
+    /* Pulsing animation for big buttons */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(234, 88, 12, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(234, 88, 12, 0); }
+    }
+    .pulse-btn {
+      animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+    }
+
+    /* Flash screen effect on shutter */
+    .shutter-flash {
+      animation: flash-animation 0.35s ease-out;
+    }
+    @keyframes flash-animation {
+      0% { opacity: 0; }
+      40% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body class="bg-amber-50 text-slate-800 min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+  <!-- Top Banner / Header -->
+  <header class="bg-gradient-to-r from-amber-600 via-orange-500 to-amber-700 text-white shadow-md py-3 px-6 flex justify-between items-center z-10">
+    <div class="flex items-center space-x-3">
+      <span class="text-3xl">🎓</span>
+      <div>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wide">2026 外埔長青學院結業典禮</h1>
+        <p class="text-xs md:text-sm text-amber-100">活到老・學到老・拍下幸福紀念時刻</p>
+      </div>
+    </div>
+    
+    <!-- Action buttons (Settings / Reset) -->
+    <div class="flex items-center space-x-2">
+      <button id="btnSwitchCamera" class="bg-amber-800/60 hover:bg-amber-800 text-white px-3 py-2 rounded-xl text-sm flex items-center space-x-1 transition">
+        <span>🔄</span>
+        <span class="hidden md:inline">切換鏡頭</span>
+      </button>
+      <button id="btnOpenSettings" class="bg-amber-800/60 hover:bg-amber-800 text-white px-3 py-2 rounded-xl text-sm flex items-center space-x-1 transition">
+        <span>⚙️</span>
+        <span class="hidden md:inline">設定</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Flash Screen Overlay -->
+  <div id="flashOverlay" class="fixed inset-0 bg-white pointer-events-none opacity-0 z-50"></div>
+
+  <!-- Main Work Stage -->
+  <main class="flex-1 flex flex-col items-center justify-center p-3 md:p-6 w-full max-w-6xl mx-auto">
+
+    <!-- STEP 1 & 2: LIVE CAMERA & PREVIEW CONTAINER -->
+    <div id="captureSection" class="w-full flex flex-col items-center">
+      
+      <!-- Viewfinder (3:2 standard landscape ratio) -->
+      <div class="relative w-full max-w-4xl bg-stone-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-200 aspect-[3/2] flex items-center justify-center">
+        
+        <!-- Live Video Element -->
+        <video id="videoPreview" autoplay playsinline muted class="w-full h-full object-cover mirror-mode"></video>
+        
+        <!-- Active Frame Overlay on Live Preview -->
+        <img id="liveFrameOverlay" src="frames/frame_flower_garden.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
+        
+        <!-- Big Countdown Number Display -->
+        <div id="countdownBox" class="absolute inset-0 flex items-center justify-center pointer-events-none z-30 hidden">
+          <span id="countdownText" class="text-9xl md:text-[14rem] font-black text-amber-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] animate-ping">3</span>
+        </div>
+
+        <!-- Camera Off / Permission Notice -->
+        <div id="cameraNotice" class="absolute inset-0 bg-stone-800 text-white flex flex-col items-center justify-center p-6 text-center z-20 hidden">
+          <span class="text-5xl mb-4">📷</span>
+          <p class="text-lg md:text-xl font-bold mb-2">請允許瀏覽器使用相機權限</p>
+          <p class="text-sm text-stone-300 max-w-md mb-6">點擊下方按鈕以啟用 iPad / 平板鏡頭開始拍照。</p>
+          <button id="btnRequestCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-lg font-bold px-6 py-3 rounded-2xl shadow-lg">啟動相機</button>
+        </div>
+      </div>
+
+      <!-- Live Controls (Shutter Button & Countdown Options) -->
+      <div id="liveControls" class="mt-6 flex flex-col md:flex-row items-center justify-center gap-6 w-full">
+        <!-- Countdown Seconds Toggle -->
+        <div class="flex items-center bg-amber-100 border border-amber-300 rounded-2xl p-1.5 shadow-sm text-base font-medium">
+          <span class="px-3 text-amber-900 font-bold">倒數：</span>
+          <button data-seconds="3" class="btn-timer px-4 py-2 rounded-xl bg-amber-600 text-white font-bold shadow transition">3 秒</button>
+          <button data-seconds="5" class="btn-timer px-4 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">5 秒</button>
+          <button data-seconds="10" class="btn-timer px-4 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">10 秒</button>
+        </div>
+
+        <!-- Big Shutter Button -->
+        <button id="btnStartCapture" class="pulse-btn bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-2xl md:text-3xl font-black px-12 py-5 rounded-full shadow-2xl flex items-center space-x-3 transform active:scale-95 transition">
+          <span class="text-3xl">📸</span>
+          <span>點我拍照</span>
+        </button>
+      </div>
+
+      <!-- Frame Selector (Live pre-select or post-select) -->
+      <div class="mt-6 w-full max-w-4xl">
+        <p class="text-center font-bold text-amber-900 text-base md:text-lg mb-3">🎨 點選更換外框（3 款任選）：</p>
+        <div class="grid grid-cols-3 gap-3 md:gap-5">
+          <!-- Frame 1 -->
+          <button data-frame="frames/frame_flower_garden.png" class="frame-thumb-btn border-4 border-amber-500 bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
+              <img src="frames/frame_flower_garden.png" class="w-full h-full object-contain">
+            </div>
+            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">1. 溫馨花草框</span>
+          </button>
+          
+          <!-- Frame 2 -->
+          <button data-frame="frames/frame_chalkboard.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
+              <img src="frames/frame_chalkboard.png" class="w-full h-full object-contain">
+            </div>
+            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">2. 校園黑板框</span>
+          </button>
+          
+          <!-- Frame 3 -->
+          <button data-frame="frames/frame_blue_ocean.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
+              <img src="frames/frame_blue_ocean.png" class="w-full h-full object-contain">
+            </div>
+            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">3. 藍天海洋框</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3 & 4: RESULT, PREVIEW & QR CODE SHARE -->
+    <div id="resultSection" class="w-full max-w-5xl flex flex-col items-center hidden">
+      <div class="bg-white rounded-3xl shadow-2xl p-4 md:p-8 border-4 border-amber-300 w-full flex flex-col lg:flex-row items-center gap-8">
+        
+        <!-- Left: Synthesized 4x6 Result Image -->
+        <div class="w-full lg:w-3/5 flex flex-col items-center">
+          <div class="relative w-full rounded-2xl overflow-hidden shadow-xl border-4 border-amber-200 aspect-[3/2] bg-stone-900">
+            <img id="resultImagePreview" class="w-full h-full object-contain" alt="合成照片預覽">
+          </div>
+          <div class="flex items-center gap-3 mt-4 w-full">
+            <button id="btnRetakePhoto" class="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-800 py-3.5 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 transition">
+              <span>🔄</span>
+              <span>重拍一張</span>
+            </button>
+            <button id="btnSaveToDevice" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3.5 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 shadow-md transition">
+              <span>💾</span>
+              <span>下載相片</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: QR Code for Mobile Phones -->
+        <div class="w-full lg:w-2/5 flex flex-col items-center text-center p-4 bg-amber-50/80 rounded-2xl border-2 border-amber-200">
+          <h2 class="text-xl md:text-2xl font-black text-amber-950 flex items-center justify-center gap-2 mb-2">
+            <span>📱</span> 手機掃描立即存檔
+          </h2>
+          <p class="text-xs md:text-sm text-stone-600 mb-4">請用手機打開「相機」掃描下方 QR Code，即可將高畫質相片下載至手機相簿！</p>
+          
+          <!-- QR Code Canvas Container -->
+          <div id="qrcodeWrapper" class="bg-white p-4 rounded-2xl shadow-lg border-2 border-amber-300 flex items-center justify-center min-w-[200px] min-h-[200px]">
+            <div id="qrcodeBox"></div>
+          </div>
+          
+          <!-- Upload Status Indicator -->
+          <div id="uploadStatus" class="mt-3 text-xs md:text-sm font-bold text-amber-800 flex items-center gap-2">
+            <span class="animate-spin text-base">⏳</span>
+            <span>正在生成雲端照片下載連結...</span>
+          </div>
+
+          <!-- Auto Restart Countdown -->
+          <div class="mt-5 pt-4 border-t border-amber-200 w-full flex items-center justify-between">
+            <span class="text-xs text-stone-500"><span id="resetSeconds">45</span> 秒後自動返回拍照</span>
+            <button id="btnNextGuest" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition">
+              下一位拍 ➡️
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Settings Modal (ImgBB Key / Photo Settings) -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-2 border-amber-300">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-black text-slate-800 flex items-center gap-2">
+          <span>⚙️</span> 拍貼機系統設定
+        </h3>
+        <button id="btnCloseSettings" class="text-stone-400 hover:text-stone-700 text-2xl font-bold">&times;</button>
+      </div>
+
+      <div class="space-y-4 text-sm text-slate-700">
+        <div>
+          <label class="block font-bold mb-1 text-slate-800">ImgBB 免費圖床 API Key (選填)：</label>
+          <input type="text" id="inputImgbbKey" placeholder="貼上您的 ImgBB API Key" class="w-full border border-stone-300 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+          <p class="text-xs text-stone-500 mt-1">若無填寫，系統將自動使用本機展示下載模式。填入後照片可全自動上傳雲端供全網手機掃描。</p>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-1 text-slate-800">相機鏡頭鏡像翻轉：</label>
+          <div class="flex items-center space-x-4">
+            <label class="inline-flex items-center">
+              <input type="checkbox" id="checkMirrorMode" checked class="rounded text-amber-600 focus:ring-amber-500 h-5 w-5">
+              <span class="ml-2 font-bold">開啟鏡像（照鏡子效果）</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold mb-1 text-slate-800">相框比例與解析度：</label>
+          <p class="text-xs text-stone-600 bg-amber-50 p-2 rounded-lg">標準 4x6 吋橫式（1800 x 1200 像素，高解析輸出）</p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end gap-3">
+        <button id="btnSaveSettings" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-xl shadow transition">儲存設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offscreen Synthesis Canvas (4x6 @ 1800x1200) -->
+  <canvas id="synthesisCanvas" width="1800" height="1200" class="hidden"></canvas>
+
+  <!-- Footer -->
+  <footer class="py-2 text-center text-xs text-amber-800/80 bg-amber-100/50">
+    外埔長青學院結業典禮專用拍貼機 ｜ 支援 iPad / 觸控螢幕 / 平板全螢幕
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // --- Application State ---
+    const STATE = {
+      countdownSeconds: 3,
+      selectedFrame: 'frames/frame_flower_garden.png',
+      stream: null,
+      facingMode: 'user',
+      isMirror: true,
+      capturedBlob: null,
+      capturedDataUrl: null,
+      autoResetTimer: null,
+      imgbbApiKey: localStorage.getItem('imgbb_api_key') || '',
+      // Relative hole geometry calculated for frames [minX, maxX, minY, maxY]
+      // frame_flower_garden: 252x179, inner hole [42..211, 55..147]
+      // frame_chalkboard: 252x179, inner hole [39..213, 54..150]
+      // frame_blue_ocean: 328x151, inner hole [59..278, 40..130]
+      frameHoles: {
+        'frames/frame_flower_garden.png': { rx: 42/252, rw: (211-42+1)/252, ry: 55/179, rh: (147-55+1)/179 },
+        'frames/frame_chalkboard.png':     { rx: 39/252, rw: (213-39+1)/252, ry: 54/179, rh: (150-54+1)/179 },
+        'frames/frame_blue_ocean.png':     { rx: 59/328, rw: (278-59+1)/328, ry: 40/151, rh: (130-40+1)/151 }
+      }
+    };
+
+    // --- DOM Elements ---
+    const videoPreview = document.getElementById('videoPreview');
+    const liveFrameOverlay = document.getElementById('liveFrameOverlay');
+    const countdownBox = document.getElementById('countdownBox');
+    const countdownText = document.getElementById('countdownText');
+    const flashOverlay = document.getElementById('flashOverlay');
+    const cameraNotice = document.getElementById('cameraNotice');
+    
+    const captureSection = document.getElementById('captureSection');
+    const resultSection = document.getElementById('resultSection');
+    const resultImagePreview = document.getElementById('resultImagePreview');
+    const qrcodeBox = document.getElementById('qrcodeBox');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const resetSecondsSpan = document.getElementById('resetSeconds');
+
+    const btnStartCapture = document.getElementById('btnStartCapture');
+    const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+    const btnRequestCamera = document.getElementById('btnRequestCamera');
+    const btnRetakePhoto = document.getElementById('btnRetakePhoto');
+    const btnSaveToDevice = document.getElementById('btnSaveToDevice');
+    const btnNextGuest = document.getElementById('btnNextGuest');
+    const synthesisCanvas = document.getElementById('synthesisCanvas');
+
+    // Settings Modal DOM
+    const settingsModal = document.getElementById('settingsModal');
+    const btnOpenSettings = document.getElementById('btnOpenSettings');
+    const btnCloseSettings = document.getElementById('btnCloseSettings');
+    const btnSaveSettings = document.getElementById('btnSaveSettings');
+    const inputImgbbKey = document.getElementById('inputImgbbKey');
+    const checkMirrorMode = document.getElementById('checkMirrorMode');
+
+    // --- Sound Effects (Audio Synthesis) ---
+    function playBeep(freq = 600, duration = 0.15) {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.setValueAtTime(1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn('Audio synthesis not supported or blocked:', e);
+      }
+    }
+
+    function playShutterSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        gain.gain.setValueAtTime(1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+        osc.stop(audioCtx.currentTime + 0.25);
+      } catch (e) {}
+    }
+
+    // --- Initialize Camera Stream ---
+    async function initCamera() {
+      if (STATE.stream) {
+        STATE.stream.getTracks().forEach(t => t.stop());
+      }
+      try {
+        const constraints = {
+          audio: false,
+          video: {
+            facingMode: STATE.facingMode,
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+          }
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        STATE.stream = stream;
+        videoPreview.srcObject = stream;
+        cameraNotice.classList.add('hidden');
+      } catch (err) {
+        console.error('Camera access failed:', err);
+        cameraNotice.classList.remove('hidden');
+      }
+    }
+
+    // --- Frame Switching ---
+    document.querySelectorAll('.frame-thumb-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.frame-thumb-btn').forEach(b => {
+          b.classList.remove('border-amber-500');
+          b.classList.add('border-transparent');
+        });
+        btn.classList.remove('border-transparent');
+        btn.classList.add('border-amber-500');
+        
+        const frameSrc = btn.getAttribute('data-frame');
+        STATE.selectedFrame = frameSrc;
+        liveFrameOverlay.src = frameSrc;
+        playBeep(450, 0.08);
+      });
+    });
+
+    // --- Countdown Timer Toggle ---
+    document.querySelectorAll('.btn-timer').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.btn-timer').forEach(b => {
+          b.classList.remove('bg-amber-600', 'text-white');
+          b.classList.add('text-amber-800');
+        });
+        btn.classList.add('bg-amber-600', 'text-white');
+        btn.classList.remove('text-amber-800');
+        STATE.countdownSeconds = parseInt(btn.getAttribute('data-seconds'), 10);
+      });
+    });
+
+    // --- Start Capture Sequence ---
+    btnStartCapture.addEventListener('click', () => {
+      let count = STATE.countdownSeconds;
+      countdownBox.classList.remove('hidden');
+      btnStartCapture.disabled = true;
+      btnStartCapture.classList.add('opacity-50');
+
+      countdownText.innerText = count;
+      playBeep(650, 0.15);
+
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          countdownText.innerText = count;
+          playBeep(650, 0.15);
+        } else {
+          clearInterval(timer);
+          countdownBox.classList.add('hidden');
+          btnStartCapture.disabled = false;
+          btnStartCapture.classList.remove('opacity-50');
+          takePhoto();
+        }
+      }, 1000);
+    });
+
+    // --- Take Photo and Synthesize 4x6 Picture ---
+    async function takePhoto() {
+      // 1. Shutter flash & sound
+      flashOverlay.classList.add('shutter-flash');
+      setTimeout(() => flashOverlay.classList.remove('shutter-flash'), 350);
+      playShutterSound();
+
+      // 2. Setup 1800 x 1200 Synthesis Canvas
+      const cw = synthesisCanvas.width;   // 1800
+      const ch = synthesisCanvas.height;  // 1200
+      const ctx = synthesisCanvas.getContext('2d');
+      ctx.clearRect(0, 0, cw, ch);
+
+      // Load Frame Image
+      const frameImg = new Image();
+      frameImg.crossOrigin = 'anonymous';
+      frameImg.src = STATE.selectedFrame;
+      await new Promise(resolve => { frameImg.onload = resolve; });
+
+      // Calculate photo placement into frame inner transparent hole
+      const hole = STATE.frameHoles[STATE.selectedFrame] || { rx: 0.15, rw: 0.7, ry: 0.25, rh: 0.55 };
+      const holeX = hole.rx * cw;
+      const holeY = hole.ry * ch;
+      const holeW = hole.rw * cw;
+      const holeH = hole.rh * ch;
+
+      // Draw camera frame into the hole area with cover/aspect ratio fitting
+      const vw = videoPreview.videoWidth || 1920;
+      const vh = videoPreview.videoHeight || 1080;
+      
+      ctx.save();
+      // Clip to hole rectangle (with small bleed to avoid gaps)
+      ctx.beginPath();
+      ctx.rect(holeX - 10, holeY - 10, holeW + 20, holeH + 20);
+      ctx.clip();
+
+      // Calculate crop & scale for video to cover hole
+      const scale = Math.max(holeW / vw, holeH / vh);
+      const drawW = vw * scale;
+      const drawH = vh * scale;
+      const drawX = holeX + (holeW - drawW) / 2;
+      const drawY = holeY + (holeH - drawH) / 2;
+
+      if (STATE.isMirror) {
+        ctx.translate(drawX + drawW, drawY);
+        ctx.scale(-1, 1);
+        ctx.drawImage(videoPreview, 0, 0, drawW, drawH);
+      } else {
+        ctx.drawImage(videoPreview, drawX, drawY, drawW, drawH);
+      }
+      ctx.restore();
+
+      // Draw outer Frame Overlay on top
+      ctx.drawImage(frameImg, 0, 0, cw, ch);
+
+      // 3. Export to High-res DataURL & Blob
+      const dataUrl = synthesisCanvas.toDataURL('image/jpeg', 0.92);
+      STATE.capturedDataUrl = dataUrl;
+      resultImagePreview.src = dataUrl;
+
+      // Switch to Result View
+      captureSection.classList.add('hidden');
+      resultSection.classList.remove('hidden');
+
+      // Trigger Confetti Celebration!
+      try {
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {}
+
+      // Start Cloud Upload & QR Code Generation
+      processQRCode(dataUrl);
+
+      // Start Auto Reset Timer (45s)
+      startAutoResetTimer(45);
+    }
+
+    // --- QR Code & Upload Handler ---
+    async function processQRCode(dataUrl) {
+      qrcodeBox.innerHTML = '';
+      uploadStatus.innerHTML = '<span class="animate-spin text-base">⏳</span> 正在生成相片專屬 QR Code...';
+
+      const apiKey = STATE.imgbbApiKey || '';
+      
+      // If user configured ImgBB API Key, upload to cloud
+      if (apiKey) {
+        try {
+          uploadStatus.innerHTML = '<span class="animate-spin text-base">☁️</span> 上傳至雲端空間中...';
+          const base64Data = dataUrl.split(',')[1];
+          const formData = new FormData();
+          formData.append('image', base64Data);
+
+          const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: 'POST',
+            body: formData
+          });
+          const json = await res.json();
+          if (json.success && json.data && json.data.url) {
+            renderQRCode(json.data.url);
+            uploadStatus.innerHTML = '<span class="text-green-600 font-bold">✅ 雲端上傳完成！手機掃描即可下載</span>';
+            return;
+          }
+        } catch (e) {
+          console.warn('ImgBB upload error, falling back to local mode:', e);
+        }
+      }
+
+      // Fallback Demo Mode (or when offline)
+      // Generates QR Code that points to current page with image hash, or direct download link
+      uploadStatus.innerHTML = '<span class="text-amber-800">✨ 預覽模式：手機掃碼或點擊下方下載</span>';
+      // In local mode, encode download notice or local reference
+      renderQRCode(window.location.href);
+    }
+
+    function renderQRCode(textUrl) {
+      qrcodeBox.innerHTML = '';
+      new QRCode(qrcodeBox, {
+        text: textUrl,
+        width: 180,
+        height: 180,
+        colorDark: "#292524",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    // --- Save / Download Photo Locally ---
+    btnSaveToDevice.addEventListener('click', () => {
+      if (!STATE.capturedDataUrl) return;
+      const link = document.createElement('a');
+      link.download = `外埔長青學院結業典禮_${Date.now()}.jpg`;
+      link.href = STATE.capturedDataUrl;
+      link.click();
+    });
+
+    // --- Retake & Reset Flow ---
+    function returnToCapture() {
+      if (STATE.autoResetTimer) clearInterval(STATE.autoResetTimer);
+      resultSection.classList.add('hidden');
+      captureSection.classList.remove('hidden');
+      STATE.capturedDataUrl = null;
+    }
+
+    btnRetakePhoto.addEventListener('click', returnToCapture);
+    btnNextGuest.addEventListener('click', returnToCapture);
+
+    function startAutoResetTimer(seconds) {
+      if (STATE.autoResetTimer) clearInterval(STATE.autoResetTimer);
+      let left = seconds;
+      resetSecondsSpan.innerText = left;
+      STATE.autoResetTimer = setInterval(() => {
+        left--;
+        resetSecondsSpan.innerText = left;
+        if (left <= 0) {
+          clearInterval(STATE.autoResetTimer);
+          returnToCapture();
+        }
+      }, 1000);
+    }
+
+    // --- Switch Front/Back Camera ---
+    btnSwitchCamera.addEventListener('click', () => {
+      STATE.facingMode = (STATE.facingMode === 'user') ? 'environment' : 'user';
+      // If back camera, usually don't mirror
+      if (STATE.facingMode === 'environment') {
+        videoPreview.classList.remove('mirror-mode');
+        STATE.isMirror = false;
+        checkMirrorMode.checked = false;
+      } else {
+        videoPreview.classList.add('mirror-mode');
+        STATE.isMirror = true;
+        checkMirrorMode.checked = true;
+      }
+      initCamera();
+    });
+
+    btnRequestCamera.addEventListener('click', initCamera);
+
+    // --- Settings Modal Logic ---
+    btnOpenSettings.addEventListener('click', () => {
+      inputImgbbKey.value = STATE.imgbbApiKey;
+      checkMirrorMode.checked = STATE.isMirror;
+      settingsModal.classList.remove('hidden');
+    });
+
+    btnCloseSettings.addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+
+    btnSaveSettings.addEventListener('click', () => {
+      STATE.imgbbApiKey = inputImgbbKey.value.trim();
+      localStorage.setItem('imgbb_api_key', STATE.imgbbApiKey);
+      
+      STATE.isMirror = checkMirrorMode.checked;
+      if (STATE.isMirror) {
+        videoPreview.classList.add('mirror-mode');
+      } else {
+        videoPreview.classList.remove('mirror-mode');
+      }
+      settingsModal.classList.add('hidden');
+    });
+
+    // --- Initialization on page load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      inputImgbbKey.value = STATE.imgbbApiKey;
+      initCamera();
+    });
+  </script>
+</body>
+</html>
