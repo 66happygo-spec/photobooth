@@ -233,9 +233,18 @@
 
       <div class="space-y-4 text-sm text-slate-700">
         <div>
-          <label class="block font-bold mb-1 text-slate-800">ImgBB 免費圖床 API Key (選填)：</label>
-          <input type="text" id="inputImgbbKey" placeholder="貼上您的 ImgBB API Key" class="w-full border border-stone-300 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs">
-          <p class="text-xs text-stone-500 mt-1">若無填寫，系統將自動使用本機展示下載模式。填入後照片可全自動上傳雲端供全網手機掃描。</p>
+          <label class="block font-bold mb-1 text-slate-800">☁️ Cloudinary (美國加州雲端) 設定：</label>
+          <div class="space-y-2">
+            <div>
+              <span class="text-xs text-stone-600 block">Cloud Name (雲端名稱)：</span>
+              <input type="text" id="inputCloudName" placeholder="例如：my-photobooth" class="w-full border border-stone-300 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+            </div>
+            <div>
+              <span class="text-xs text-stone-600 block">Upload Preset (免金鑰上傳標籤)：</span>
+              <input type="text" id="inputUploadPreset" placeholder="預設：ml_default 或自訂 preset" class="w-full border border-stone-300 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono text-xs">
+            </div>
+          </div>
+          <p class="text-xs text-stone-500 mt-1.5">由美國 Cloudinary 官方提供。設定後照片自動上傳雲端，手機掃描 QR Code 即可下載相片。</p>
         </div>
 
         <div>
@@ -280,7 +289,8 @@
       capturedBlob: null,
       capturedDataUrl: null,
       autoResetTimer: null,
-      imgbbApiKey: localStorage.getItem('imgbb_api_key') || '',
+      cloudName: localStorage.getItem('cloudinary_cloud_name') || '',
+      uploadPreset: localStorage.getItem('cloudinary_upload_preset') || '',
       // Precise hole geometry measured at 1800 x 1200 HD resolution
       // frame_flower_garden: x=[303, 1511], y=[370, 990]
       // frame_chalkboard:     x=[277, 1526], y=[364, 1008]
@@ -320,7 +330,8 @@
     const btnOpenSettings = document.getElementById('btnOpenSettings');
     const btnCloseSettings = document.getElementById('btnCloseSettings');
     const btnSaveSettings = document.getElementById('btnSaveSettings');
-    const inputImgbbKey = document.getElementById('inputImgbbKey');
+    const inputCloudName = document.getElementById('inputCloudName');
+    const inputUploadPreset = document.getElementById('inputUploadPreset');
     const checkMirrorMode = document.getElementById('checkMirrorMode');
 
     // --- Sound Effects (Audio Synthesis) ---
@@ -650,28 +661,32 @@
       qrcodeBox.innerHTML = '';
       uploadStatus.innerHTML = '<span class="animate-spin text-base">⏳</span> 正在生成相片專屬 QR Code...';
 
-      const apiKey = STATE.imgbbApiKey || '';
+      const cloudName = STATE.cloudName || '';
+      const uploadPreset = STATE.uploadPreset || '';
       
-      // If user configured ImgBB API Key, upload to cloud
-      if (apiKey) {
+      // If user configured Cloudinary, upload to cloud
+      if (cloudName && uploadPreset) {
         try {
-          uploadStatus.innerHTML = '<span class="animate-spin text-base">☁️</span> 上傳至雲端空間中...';
-          const base64Data = dataUrl.split(',')[1];
+          uploadStatus.innerHTML = '<span class="animate-spin text-base">☁️</span> 上傳至 Cloudinary 雲端中...';
           const formData = new FormData();
-          formData.append('image', base64Data);
+          formData.append('file', dataUrl);
+          formData.append('upload_preset', uploadPreset);
 
-          const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
             method: 'POST',
             body: formData
           });
           const json = await res.json();
-          if (json.success && json.data && json.data.url) {
-            renderQRCode(json.data.url);
+          if (json.secure_url) {
+            renderQRCode(json.secure_url);
             uploadStatus.innerHTML = '<span class="text-green-600 font-bold">✅ 雲端上傳完成！手機掃描即可下載</span>';
             return;
+          } else {
+            console.warn('Cloudinary upload response:', json);
+            uploadStatus.innerHTML = `<span class="text-amber-700">⚠️ 上傳未完成：${json.error?.message || '請確認設定'}</span>`;
           }
         } catch (e) {
-          console.warn('ImgBB upload error, falling back to local mode:', e);
+          console.warn('Cloudinary upload error, falling back to local mode:', e);
         }
       }
 
@@ -748,7 +763,8 @@
 
     // --- Settings Modal Logic ---
     btnOpenSettings.addEventListener('click', () => {
-      inputImgbbKey.value = STATE.imgbbApiKey;
+      inputCloudName.value = STATE.cloudName;
+      inputUploadPreset.value = STATE.uploadPreset;
       checkMirrorMode.checked = STATE.isMirror;
       settingsModal.classList.remove('hidden');
     });
@@ -758,8 +774,10 @@
     });
 
     btnSaveSettings.addEventListener('click', () => {
-      STATE.imgbbApiKey = inputImgbbKey.value.trim();
-      localStorage.setItem('imgbb_api_key', STATE.imgbbApiKey);
+      STATE.cloudName = inputCloudName.value.trim();
+      STATE.uploadPreset = inputUploadPreset.value.trim();
+      localStorage.setItem('cloudinary_cloud_name', STATE.cloudName);
+      localStorage.setItem('cloudinary_upload_preset', STATE.uploadPreset);
       
       STATE.isMirror = checkMirrorMode.checked;
       if (STATE.isMirror) {
@@ -772,7 +790,8 @@
 
     // --- Initialization on page load ---
     window.addEventListener('DOMContentLoaded', () => {
-      inputImgbbKey.value = STATE.imgbbApiKey;
+      inputCloudName.value = STATE.cloudName;
+      inputUploadPreset.value = STATE.uploadPreset;
       initCamera();
     });
   </script>
