@@ -418,9 +418,17 @@
             console.warn('Camera video track ended unexpectedly!');
             const badgeDot = document.getElementById('camStatusDot');
             const badgeText = document.getElementById('camStatusText');
-            if (badgeDot && badgeText) {
+            STATE.reconnectCount = (STATE.reconnectCount || 0) + 1;
+            if (STATE.reconnectCount <= 5) {
+              if (badgeDot && badgeText) {
+                badgeDot.className = 'w-2 h-2 rounded-full bg-yellow-400 animate-pulse';
+                badgeText.innerText = `鏡頭中斷，自動重新連線中 (${STATE.reconnectCount}/5)...`;
+              }
+              STATE.stream = null;
+              setTimeout(initCamera, 1000);
+            } else if (badgeDot && badgeText) {
               badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
-              badgeText.innerText = '鏡頭串流被系統中止 (Track Ended)';
+              badgeText.innerText = '鏡頭被系統反覆中止，請見說明';
             }
           };
           track.onmute = () => {
