@@ -122,12 +122,17 @@
 
       <!-- Live Controls (Shutter Button & Countdown Options) -->
       <div id="liveControls" class="mt-6 flex flex-col md:flex-row items-center justify-center gap-6 w-full">
-        <!-- Countdown Seconds Toggle -->
+        <!-- Countdown Seconds Toggle (3s and 5s with cute voice) -->
         <div class="flex items-center bg-amber-100 border border-amber-300 rounded-2xl p-1.5 shadow-sm text-base font-medium">
-          <span class="px-3 text-amber-900 font-bold">倒數：</span>
-          <button data-seconds="3" class="btn-timer px-4 py-2 rounded-xl bg-amber-600 text-white font-bold shadow transition">3 秒</button>
-          <button data-seconds="5" class="btn-timer px-4 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">5 秒</button>
-          <button data-seconds="10" class="btn-timer px-4 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">10 秒</button>
+          <span class="px-3 text-amber-900 font-bold flex items-center gap-1.5">
+            <span>⏱️</span>
+            <span>倒數：</span>
+          </span>
+          <button data-seconds="3" class="btn-timer px-5 py-2.5 rounded-xl bg-amber-600 text-white font-bold shadow transition">3 秒</button>
+          <button data-seconds="5" class="btn-timer px-5 py-2.5 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">5 秒</button>
+          <span class="text-xs text-amber-800 font-bold bg-amber-200/90 px-2.5 py-1.5 rounded-xl ml-1 hidden sm:inline-flex items-center gap-1">
+            <span>🎙️</span> 可愛童音播報
+          </span>
         </div>
 
         <!-- Big Shutter Button -->
@@ -421,6 +426,55 @@
     const inputUploadPreset = document.getElementById('inputUploadPreset');
     const checkMirrorMode = document.getElementById('checkMirrorMode');
 
+    // --- Cute Child Voice Manager for Countdown ---
+    const VOICE_AUDIO = {
+      5: new Audio('audio/voice_5.mp3'),
+      4: new Audio('audio/voice_4.mp3'),
+      3: new Audio('audio/voice_3.mp3'),
+      2: new Audio('audio/voice_2.mp3'),
+      1: new Audio('audio/voice_1_smile.mp3'),
+      done: new Audio('audio/voice_praise.mp3')
+    };
+
+    // Preload audio files so they trigger instantly
+    Object.values(VOICE_AUDIO).forEach(a => {
+      a.preload = 'auto';
+      try { a.load(); } catch (e) {}
+    });
+
+    function playCountdownVoice(count) {
+      try {
+        const audio = VOICE_AUDIO[count];
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          const playPromise = audio.play();
+          if (playPromise && playPromise.catch) {
+            playPromise.catch(() => speakChildVoice(count));
+          }
+          return;
+        }
+      } catch (e) {}
+      speakChildVoice(count);
+    }
+
+    // High-pitched sweet child voice speech synthesis fallback
+    function speakChildVoice(count) {
+      if (!('speechSynthesis' in window)) return;
+      try {
+        let text = String(count);
+        if (count === 1) text = '一，笑一個！';
+        else if (count === 'done') text = '拍好囉！好漂亮喔！';
+        
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'zh-TW';
+        utter.pitch = 1.8; // High pitch like a cheerful child
+        utter.rate = 1.05;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      } catch (e) {}
+    }
+
     // --- Sound Effects (Audio Synthesis) ---
     function playBeep(freq = 600, duration = 0.15) {
       try {
@@ -706,19 +760,26 @@
 
     // --- Start Capture Sequence ---
     btnStartCapture.addEventListener('click', () => {
+      // Warm up audio contexts for iOS Safari
+      Object.values(VOICE_AUDIO).forEach(a => {
+        try { a.load(); } catch (e) {}
+      });
+
       let count = STATE.countdownSeconds;
       countdownBox.classList.remove('hidden');
       btnStartCapture.disabled = true;
       btnStartCapture.classList.add('opacity-50');
 
       countdownText.innerText = count;
-      playBeep(650, 0.15);
+      playBeep(650, 0.12);
+      playCountdownVoice(count);
 
       const timer = setInterval(() => {
         count--;
         if (count > 0) {
           countdownText.innerText = count;
-          playBeep(650, 0.15);
+          playBeep(count === 1 ? 800 : 650, 0.12);
+          playCountdownVoice(count);
         } else {
           clearInterval(timer);
           countdownBox.classList.add('hidden');
@@ -902,7 +963,7 @@
       captureSection.classList.add('hidden');
       resultSection.classList.remove('hidden');
 
-      // 繽紛紙花慶祝結業
+      // 繽紛紙花慶祝結業與可愛童音播報
       try {
         confetti({
           particleCount: 80,
@@ -910,6 +971,7 @@
           origin: { y: 0.6 }
         });
       } catch (e) {}
+      setTimeout(() => playCountdownVoice('done'), 400);
 
       // 開始雲端上傳與 QR Code 生成
       processQRCode(dataUrl);
