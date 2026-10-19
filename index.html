@@ -125,7 +125,7 @@
         </div>
 
         <!-- Tap-To-Start / Unmute / Reconnect Overlay (shows when video is paused or stream not active) -->
-        <div id="tapToStartOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-[2px] z-20 transition">
+        <div id="tapToStartOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-[2px] z-20 transition hidden">
           <div class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white px-7 py-4 rounded-3xl shadow-2xl flex flex-col items-center gap-2 border-2 border-white/80 animate-pulse">
             <span class="text-4xl md:text-5xl">📷</span>
             <span class="text-lg md:text-xl font-black">點擊此處開啟鏡頭</span>
@@ -464,9 +464,9 @@
       uploadPreset: localStorage.getItem('cloudinary_upload_preset') || 'w1reicnp',
       // High precision cutout geometry for 1800 x 1200 landscape frames (>80% view area for 2-5 persons)
       frameHoles: {
-        'frames/frame_macaron_balloons.png':  { rx: 190/1800, rw: 1425/1800, ry: 169/1200, rh: 977/1200 },
-        'frames/frame_festive_blessings.png': { rx: 99/1800,  rw: 1601/1800, ry: 186/1200, rh: 914/1200 },
-        'frames/frame_golden_sunflower.png':  { rx: 85/1800,  rw: 1629/1800, ry: 187/1200, rh: 931/1200 }
+        'frames/frame_macaron_balloons.png':  { rx: 185/1800, rw: 1429/1800, ry: 175/1200, rh: 969/1200 },
+        'frames/frame_festive_blessings.png': { rx: 96/1800,  rw: 1607/1800, ry: 195/1200, rh: 909/1200 },
+        'frames/frame_golden_sunflower.png':  { rx: 85/1800,  rw: 1629/1800, ry: 195/1200, rh: 924/1200 }
       }
     };
 
@@ -682,23 +682,26 @@
 
     // --- Initialize Camera Stream ---
     async function initCamera(preferredDeviceId = null) {
-      if (cameraWatchdogTimer) clearInterval(cameraWatchdogTimer);
+      if (cameraWatchdogTimer) {
+        clearInterval(cameraWatchdogTimer);
+        cameraWatchdogTimer = null;
+      }
       document.getElementById('cameraBlackWarning')?.classList.add('hidden');
 
-      // 1. Check browser mediaDevices support & Secure Context (HTTPS)
+      // 1. Check browser mediaDevices support & Secure Context (HTTPS or localhost)
+      const isSecure = window.isSecureContext || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
         const badgeDot = document.getElementById('camStatusDot');
         const badgeText = document.getElementById('camStatusText');
         if (badgeDot && badgeText) {
-          badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
+          badgeDot.className = 'w-2.5 h-2.5 rounded-full bg-red-500';
           badgeText.innerText = '瀏覽器未開放相機權限';
         }
         cameraNotice.classList.remove('hidden');
-        document.getElementById('cameraNoticeTitle').innerText = isHttp ? '需要 HTTPS 安全連線' : '瀏覽器不支援直接啟動相機';
-        document.getElementById('cameraNoticeDesc').innerText = isHttp 
-          ? '相機權限在多數平板與手機上僅能在 HTTPS 網址執行。請透過 GitHub Pages 正式網址開啟，或點擊下方直接載入示範照片體驗！'
-          : '請確認使用 Chrome / Safari / Edge 瀏覽器，或點擊下方載入示範照片體驗。';
+        document.getElementById('cameraNoticeTitle').innerText = isSecure ? '相機權限受限或未連接' : '需要 HTTPS 安全連線';
+        document.getElementById('cameraNoticeDesc').innerText = isSecure 
+          ? '請確認使用 Chrome / Safari / Edge 瀏覽器，並允許相機存取；或直接點擊下方「🌟 載入示範照」即可暢快體驗！'
+          : '相機功能在平板與手機上規定必須使用 HTTPS 網址。請使用 GitHub Pages 正式網址，或點擊下方直接載入示範照體驗。';
         showTapToStartOverlay();
         return;
       }
@@ -712,7 +715,7 @@
           STATE.stream = null;
         }
 
-        // 3. Configure video element essential attributes (Crucial for iOS Safari Autoplay)
+        // 3. Configure video element essential attributes (Crucial for iOS Safari & Chrome Autoplay)
         videoPreview.muted = true;
         videoPreview.defaultMuted = true;
         videoPreview.playsInline = true;
@@ -721,17 +724,18 @@
         videoPreview.setAttribute('webkit-playsinline', '');
         videoPreview.setAttribute('autoplay', '');
 
-        // 4. Progressive constraint fallback
+        // 4. Progressive constraint fallback (ensures desktop Windows webcams and mobile work seamlessly)
         const tryConstraints = [];
         if (preferredDeviceId) {
           tryConstraints.push({ video: { deviceId: { exact: preferredDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
           tryConstraints.push({ video: { deviceId: { exact: preferredDeviceId } } });
         }
-        tryConstraints.push(
-          { video: { facingMode: STATE.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } },
-          { video: { facingMode: { ideal: STATE.facingMode } } },
-          { video: true }
-        );
+        if (STATE.facingMode) {
+          tryConstraints.push({ video: { facingMode: { ideal: STATE.facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+          tryConstraints.push({ video: { facingMode: { ideal: STATE.facingMode } } });
+        }
+        tryConstraints.push({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });
+        tryConstraints.push({ video: true });
 
         let stream = null;
         let lastError = null;
@@ -745,7 +749,7 @@
         }
 
         if (!stream) {
-          throw lastError || new Error('無法取得任何視訊串流');
+          throw lastError || new Error('無法取得視訊鏡頭串流');
         }
 
         STATE.stream = stream;
@@ -753,112 +757,82 @@
         demoPhotoPreview.classList.add('hidden');
         videoPreview.classList.remove('hidden');
         videoPreview.srcObject = stream;
-        
-        // 5. Explicit play with Autoplay catch
-        try {
-          await videoPreview.play();
-          hideTapToStartOverlay();
-          cameraNotice.classList.add('hidden');
-        } catch (playErr) {
-          console.warn('Video play blocked by browser autoplay policy:', playErr);
-          showTapToStartOverlay();
-        }
 
-        // 6. Hook stream event listeners
+        // 5. Explicit play handler
+        const playStream = async () => {
+          try {
+            await videoPreview.play();
+            hideTapToStartOverlay();
+            cameraNotice.classList.add('hidden');
+            document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+            const badgeDot = document.getElementById('camStatusDot');
+            const badgeText = document.getElementById('camStatusText');
+            if (badgeDot && badgeText) {
+              badgeDot.className = 'w-2.5 h-2.5 rounded-full bg-green-400 animate-ping';
+              badgeText.innerText = '🔴 即時動態鏡頭中（請將人物對齊框內）';
+            }
+          } catch (playErr) {
+            console.warn('Video play blocked by browser policy, waiting for user gesture:', playErr);
+            showTapToStartOverlay();
+          }
+        };
+
+        videoPreview.onloadedmetadata = playStream;
         videoPreview.onplaying = () => {
           hideTapToStartOverlay();
           cameraNotice.classList.add('hidden');
+          document.getElementById('cameraBlackWarning')?.classList.add('hidden');
           const badgeDot = document.getElementById('camStatusDot');
           const badgeText = document.getElementById('camStatusText');
           if (badgeDot && badgeText) {
-            badgeDot.className = 'w-2 h-2 rounded-full bg-green-400';
-            badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth || 1280}x${videoPreview.videoHeight || 720})`;
+            badgeDot.className = 'w-2.5 h-2.5 rounded-full bg-green-400 animate-ping';
+            badgeText.innerText = '🔴 即時動態鏡頭中（請將人物對齊框內）';
           }
         };
 
-        videoPreview.onpause = () => {
-          if (STATE.stream && !STATE.demoImage) {
-            videoPreview.play().catch(() => showTapToStartOverlay());
-          }
-        };
-
+        // Track lifecycle events
         stream.getVideoTracks().forEach(track => {
           track.onended = () => {
-            console.warn('Video track ended, attempting reconnect...');
+            console.warn('Video track ended');
             STATE.stream = null;
             showTapToStartOverlay();
-            setTimeout(initCamera, 1200);
           };
           track.onmute = () => {
-            console.warn('Video track muted by OS or hardware privacy switch!');
-            document.getElementById('cameraBlackWarning')?.classList.remove('hidden');
+            console.warn('Video track muted');
           };
           track.onunmute = () => {
-            document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+            hideTapToStartOverlay();
           };
         });
 
-        // 7. Enumerate devices for multi-camera support
+        await playStream();
         await updateCameraDeviceList();
-
-        // 8. Watchdog: Check if the camera delivers actual video frames (not black / 0x0)
-        let checkCount = 0;
-        cameraWatchdogTimer = setInterval(() => {
-          checkCount++;
-          if (STATE.demoImage) {
-            clearInterval(cameraWatchdogTimer);
-            return;
-          }
-          if (videoPreview.videoWidth > 0 && !videoPreview.paused) {
-            hideTapToStartOverlay();
-            // Test 1-pixel frame luminance to detect closed privacy shutters
-            try {
-              const testCanvas = document.createElement('canvas');
-              testCanvas.width = 16;
-              testCanvas.height = 16;
-              const tctx = testCanvas.getContext('2d');
-              tctx.drawImage(videoPreview, 0, 0, 16, 16);
-              const pdata = tctx.getImageData(0, 0, 16, 16).data;
-              let sum = 0;
-              for (let i = 0; i < pdata.length; i += 4) {
-                sum += (pdata[i] + pdata[i+1] + pdata[i+2]) / 3;
-              }
-              const avgLum = sum / (pdata.length / 4);
-              if (avgLum < 2.0 && checkCount >= 3) {
-                // Camera is streaming completely black pixels (likely privacy shutter closed or blocked)
-                document.getElementById('cameraBlackWarning')?.classList.remove('hidden');
-              } else {
-                document.getElementById('cameraBlackWarning')?.classList.add('hidden');
-              }
-            } catch(e) {}
-            if (checkCount >= 5) clearInterval(cameraWatchdogTimer);
-          } else if (checkCount >= 3) {
-            // Still 0x0 or paused
-            showTapToStartOverlay();
-          }
-        }, 800);
 
       } catch (err) {
         console.error('Camera access failed:', err);
         const badgeDot = document.getElementById('camStatusDot');
         const badgeText = document.getElementById('camStatusText');
         if (badgeDot && badgeText) {
-          badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
-          badgeText.innerText = '鏡頭未啟動或被佔用';
+          badgeDot.className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+          badgeText.innerText = '鏡頭未啟動 (可載入示範照片)';
         }
         cameraNotice.classList.remove('hidden');
         showTapToStartOverlay();
         
-        let errorDesc = '請關閉其他使用視訊鏡頭的分頁或軟體（如 Teams / Zoom / Line），點擊下方重新啟動；或使用示範照片測試。';
+        let title = '相機目前無法開啟';
+        let desc = '若瀏覽器跳出授權提示，請點選「允許」；若相機被其他軟體佔用，請關閉後重試。您也可以直接載入示範照片體驗！';
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-          errorDesc = '相機授權被瀏覽器拒絕。請在網址列旁點擊「鎖頭」或「設定」圖示，允許使用相機權限後重試。';
+          title = '⚠️ 相機權限已被瀏覽器封鎖';
+          desc = '請點選網址列左側 🔒「鎖頭」圖示（或網站設定），將「相機」權限改為「允許」，然後重新整理網頁；或直接點選下方「🌟 載入示範照」！';
         } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-          errorDesc = '找不到視訊相機裝置。若為桌上型電腦，請插入 USB 視訊鏡頭，或直接點選「🌟 載入示範照片」。';
+          title = '未偵測到相機鏡頭';
+          desc = '此裝置似乎未連接視訊鏡頭。請確認 USB 鏡頭已插妥，或直接點選下方「🌟 載入示範照」進行完整拍貼體驗！';
         } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-          errorDesc = '相機目前被其他應用程式（如 Teams / Zoom / 視訊開關）佔用，請關閉後點擊重新嘗試。';
+          title = '相機正被其他軟體佔用';
+          desc = '相機可能正被 Teams / Zoom / Line / Windows 內建相機佔用。請關閉佔用軟體後再點選「重新啟動鏡頭」，或載入示範照片。';
         }
-        document.getElementById('cameraNoticeTitle').innerText = err.name || '相機無法啟動';
-        document.getElementById('cameraNoticeDesc').innerText = errorDesc;
+        document.getElementById('cameraNoticeTitle').innerText = title;
+        document.getElementById('cameraNoticeDesc').innerText = desc;
       }
     }
 
@@ -1035,36 +1009,44 @@
 
       // 1. Get or Load Frame Image from cache
       let frameImg = FRAME_CACHE[STATE.selectedFrame];
-      if (!frameImg) {
+      if (!frameImg || !frameImg.complete) {
         frameImg = new Image();
         frameImg.crossOrigin = 'anonymous';
         frameImg.src = STATE.selectedFrame;
-        await new Promise(resolve => { frameImg.onload = resolve; });
+        await new Promise(resolve => {
+          frameImg.onload = resolve;
+          frameImg.onerror = resolve;
+        });
         FRAME_CACHE[STATE.selectedFrame] = frameImg;
       }
 
       // 2. Uniform hole placement for 1800 x 1200 HD frames
-      const hole = STATE.frameHoles[STATE.selectedFrame] || { rx: 190/1800, rw: 1425/1800, ry: 169/1200, rh: 977/1200 };
+      const hole = STATE.frameHoles[STATE.selectedFrame] || { rx: 185/1800, rw: 1429/1800, ry: 175/1200, rh: 969/1200 };
       const holeX = Math.round(hole.rx * cw);
       const holeY = Math.round(hole.ry * ch);
       const holeW = Math.round(hole.rw * cw);
       const holeH = Math.round(hole.rh * ch);
 
+      // 設定 32px 出血緩衝，確保相片邊緣完全延伸至不透明相框邊飾底下，絕不留白邊縫隙
+      const bleed = 32;
+      const targetX = Math.max(0, holeX - bleed);
+      const targetY = Math.max(0, holeY - bleed);
+      const targetW = Math.min(cw - targetX, holeW + (holeX - targetX) + bleed);
+      const targetH = Math.min(ch - targetY, holeH + (holeY - targetY) + bleed);
+
       // 3. Render photo with selected style into offscreen hole canvas
       const photoCanvas = document.createElement('canvas');
-      photoCanvas.width = holeW;
-      photoCanvas.height = holeH;
+      photoCanvas.width = targetW;
+      photoCanvas.height = targetH;
       const pctx = photoCanvas.getContext('2d');
 
       const raw = STATE.rawCaptureCanvas;
-      // When in contain/wide mode, zoom out slightly so heads are not clipped by the top banner
-      const scale = (STATE.framingMode === 'contain')
-        ? Math.min(holeW / raw.width, holeH / raw.height) * 1.08
-        : Math.max(holeW / raw.width, holeH / raw.height);
+      // 永遠使用 Math.max 填滿視窗，保證不留任何白邊縫隙，且2~5人合照完美置中
+      const scale = Math.max(targetW / raw.width, targetH / raw.height);
       const dw = raw.width * scale;
       const dh = raw.height * scale;
-      const dx = (holeW - dw) / 2;
-      const dy = (STATE.framingMode === 'contain') ? ((holeH - dh) / 2 + 15) : ((holeH - dh) / 2);
+      const dx = (targetW - dw) / 2;
+      const dy = (targetH - dh) / 2;
 
       const style = STATE.selectedStyle || 'beauty';
 
@@ -1079,8 +1061,8 @@
 
         // 柔膚濾鏡層 (高斯模糊半透明疊加，撫平微皺紋並維持輪廓清晰)
         const blurCanvas = document.createElement('canvas');
-        blurCanvas.width = holeW;
-        blurCanvas.height = holeH;
+        blurCanvas.width = targetW;
+        blurCanvas.height = targetH;
         const bctx = blurCanvas.getContext('2d');
         bctx.filter = 'blur(6px)';
         bctx.drawImage(photoCanvas, 0, 0);
@@ -1094,14 +1076,14 @@
         pctx.save();
         pctx.globalCompositeOperation = 'screen';
         pctx.fillStyle = 'rgba(255, 125, 120, 0.08)';
-        pctx.fillRect(0, 0, holeW, holeH);
+        pctx.fillRect(0, 0, targetW, targetH);
         pctx.restore();
 
         // 柔和自然蘋果光
         pctx.save();
         pctx.globalCompositeOperation = 'soft-light';
         pctx.fillStyle = 'rgba(255, 235, 220, 0.18)';
-        pctx.fillRect(0, 0, holeW, holeH);
+        pctx.fillRect(0, 0, targetW, targetH);
         pctx.restore();
 
       } else if (style === 'portrait') {
@@ -1112,25 +1094,25 @@
 
         // 柔美光學散景景深層
         const blurCanvas = document.createElement('canvas');
-        blurCanvas.width = holeW;
-        blurCanvas.height = holeH;
+        blurCanvas.width = targetW;
+        blurCanvas.height = targetH;
         const bctx = blurCanvas.getContext('2d');
         bctx.filter = 'blur(12px)';
         bctx.drawImage(photoCanvas, 0, 0);
 
         // 徑向漸層遮罩：中心清晰、向外柔和過渡至柔焦
         const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = holeW;
-        maskCanvas.height = holeH;
+        maskCanvas.width = targetW;
+        maskCanvas.height = targetH;
         const mctx = maskCanvas.getContext('2d');
         const maskGrad = mctx.createRadialGradient(
-          holeW * 0.5, holeH * 0.46, holeW * 0.22,
-          holeW * 0.5, holeH * 0.46, holeW * 0.50
+          targetW * 0.5, targetH * 0.46, targetW * 0.22,
+          targetW * 0.5, targetH * 0.46, targetW * 0.50
         );
         maskGrad.addColorStop(0, 'rgba(0,0,0,0)');
         maskGrad.addColorStop(1, 'rgba(0,0,0,1)');
         mctx.fillStyle = maskGrad;
-        mctx.fillRect(0, 0, holeW, holeH);
+        mctx.fillRect(0, 0, targetW, targetH);
 
         bctx.globalCompositeOperation = 'destination-in';
         bctx.drawImage(maskCanvas, 0, 0);
@@ -1139,28 +1121,25 @@
 
         // 人像視覺微暗角聚攏
         const vigGrad = pctx.createRadialGradient(
-          holeW * 0.5, holeH * 0.48, holeW * 0.32,
-          holeW * 0.5, holeH * 0.48, holeW * 0.65
+          targetW * 0.5, targetH * 0.48, targetW * 0.32,
+          targetW * 0.5, targetH * 0.48, targetW * 0.65
         );
         vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
         vigGrad.addColorStop(1, 'rgba(40,20,10,0.18)');
         pctx.fillStyle = vigGrad;
-        pctx.fillRect(0, 0, holeW, holeH);
+        pctx.fillRect(0, 0, targetW, targetH);
       }
 
-      // 4. 將相片繪製至合成畫布透空區 (6px 出血邊緣防止縫隙)
-      ctx.save();
-      ctx.beginPath();
-      ctx.rect(holeX - 6, holeY - 6, holeW + 12, holeH + 12);
-      ctx.clip();
-      ctx.drawImage(photoCanvas, holeX, holeY, holeW, holeH);
-      ctx.restore();
+      // 4. 【關鍵圖層順序】先將照片繪製於畫布底層（圖層 0）
+      ctx.drawImage(photoCanvas, targetX, targetY, targetW, targetH);
 
-      // 5. 繪製上層高解析圖框
-      ctx.drawImage(frameImg, 0, 0, cw, ch);
+      // 5. 【關鍵圖層順序】將相框繪製於上層（圖層 1），相框邊飾與標題完美覆蓋邊緣，絕不遮擋圖框！
+      if (frameImg) {
+        ctx.drawImage(frameImg, 0, 0, cw, ch);
+      }
 
       // 6. 輸出高畫質 JPEG
-      const dataUrl = synthesisCanvas.toDataURL('image/jpeg', 0.92);
+      const dataUrl = synthesisCanvas.toDataURL('image/jpeg', 0.95);
       STATE.capturedDataUrl = dataUrl;
       resultImagePreview.src = dataUrl;
       return dataUrl;
@@ -1375,17 +1354,13 @@
     function updateFramingModeUI() {
       const btnContain = document.getElementById('btnFitContain');
       const btnCover = document.getElementById('btnFitCover');
-      if (STATE.framingMode === 'contain') {
-        videoPreview.style.objectFit = 'contain';
-        videoPreview.style.transform = (STATE.isMirror ? 'scale(-1, 1)' : 'none') + ' scale(0.96) translateY(8px)';
-        if (btnContain && btnCover) {
+      videoPreview.style.objectFit = 'cover';
+      videoPreview.style.transform = (STATE.isMirror ? 'scale(-1, 1)' : 'none');
+      if (btnContain && btnCover) {
+        if (STATE.framingMode === 'contain') {
           btnContain.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white shadow font-bold';
           btnCover.className = 'px-2.5 py-1 rounded-lg transition text-stone-300 hover:text-white';
-        }
-      } else {
-        videoPreview.style.objectFit = 'cover';
-        videoPreview.style.transform = (STATE.isMirror ? 'scale(-1, 1)' : 'none');
-        if (btnContain && btnCover) {
+        } else {
           btnCover.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white shadow font-bold';
           btnContain.className = 'px-2.5 py-1 rounded-lg transition text-stone-300 hover:text-white';
         }
@@ -1400,35 +1375,6 @@
       STATE.framingMode = 'cover';
       updateFramingModeUI();
     });
-
-    // --- Real-Time Video Freeze Watchdog ---
-    let lastVideoTime = -1;
-    let lastMotionTimestamp = Date.now();
-
-    videoPreview.addEventListener('timeupdate', () => {
-      if (videoPreview.currentTime !== lastVideoTime) {
-        lastVideoTime = videoPreview.currentTime;
-        lastMotionTimestamp = Date.now();
-        const dot = document.getElementById('camStatusDot');
-        if (dot) {
-          dot.className = 'w-2.5 h-2.5 rounded-full bg-green-400 animate-ping';
-        }
-      }
-    });
-
-    setInterval(() => {
-      // Only monitor when in captureSection with camera stream
-      if (captureSection.classList.contains('hidden')) return;
-      if (STATE.demoImage || !STATE.stream) return;
-
-      const idleMs = Date.now() - lastMotionTimestamp;
-      if (idleMs > 2200 && !videoPreview.paused) {
-        console.warn('Video playback stalled or frozen, attempting auto-resume...');
-        const dot = document.getElementById('camStatusDot');
-        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse';
-        videoPreview.play().catch(() => showTapToStartOverlay());
-      }
-    }, 1000);
 
     // --- Settings Modal Logic ---
     btnOpenSettings.addEventListener('click', () => {
