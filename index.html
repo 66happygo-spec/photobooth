@@ -83,13 +83,13 @@
     <div id="captureSection" class="w-full flex flex-col items-center">
       
       <!-- Viewfinder (3:2 standard landscape ratio) -->
-      <div class="relative w-full max-w-4xl bg-stone-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-200 aspect-[3/2] flex items-center justify-center">
+      <div id="viewfinderBox" class="relative w-full max-w-4xl bg-stone-900 rounded-3xl shadow-2xl overflow-hidden border-4 border-amber-200 aspect-[3/2] flex items-center justify-center cursor-pointer select-none">
         
         <!-- Live Video Element (Positioned in background) -->
-        <video id="videoPreview" autoplay playsinline muted class="absolute inset-0 w-full h-full object-cover mirror-mode z-0"></video>
+        <video id="videoPreview" autoplay playsinline webkit-playsinline muted class="absolute inset-0 w-full h-full object-cover mirror-mode z-0"></video>
         
         <!-- Live Fallback Demo Image -->
-        <img id="demoPhotoPreview" class="absolute inset-0 w-full h-full object-cover mirror-mode z-0 hidden" alt="示範相片">
+        <img id="demoPhotoPreview" src="frames/demo_seniors.jpg" class="absolute inset-0 w-full h-full object-cover mirror-mode z-0 hidden" alt="示範相片">
 
         <!-- Active Frame Overlay on Live Preview -->
         <img id="liveFrameOverlay" src="frames/frame_macaron_balloons.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
@@ -100,24 +100,74 @@
         </div>
 
         <!-- Camera Status Indicator Badge -->
-        <div id="cameraStatusBadge" class="absolute top-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full z-20 flex items-center gap-1.5">
+        <div id="cameraStatusBadge" class="absolute top-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full z-20 flex items-center gap-1.5 pointer-events-none">
           <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" id="camStatusDot"></span>
           <span id="camStatusText">鏡頭連接中...</span>
         </div>
 
+        <!-- Tap-To-Start / Unmute / Reconnect Overlay (shows when video is paused or stream not active) -->
+        <div id="tapToStartOverlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/55 backdrop-blur-[2px] z-20 transition">
+          <div class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-95 text-white px-7 py-4 rounded-3xl shadow-2xl flex flex-col items-center gap-2 border-2 border-white/80 animate-pulse">
+            <span class="text-4xl md:text-5xl">📷</span>
+            <span class="text-lg md:text-xl font-black">點擊此處開啟鏡頭</span>
+            <span class="text-xs text-amber-100 font-medium">若瀏覽器提示「使用您的相機」，請點擊「允許」</span>
+          </div>
+          <button id="btnUseDemoFromTap" type="button" class="mt-4 bg-teal-800/80 hover:bg-teal-900 text-white text-xs md:text-sm font-bold px-4 py-2 rounded-2xl border border-teal-300/40 shadow-lg transition active:scale-95 flex items-center gap-1.5">
+            <span>🌟</span>
+            <span>或直接載入示範照片測試體驗</span>
+          </button>
+        </div>
+
+        <!-- Camera Black Screen Warning Alert -->
+        <div id="cameraBlackWarning" class="absolute bottom-3 inset-x-3 bg-red-600/90 text-white text-xs md:text-sm px-4 py-2.5 rounded-2xl z-25 flex flex-col sm:flex-row items-center justify-between gap-2 backdrop-blur shadow-xl hidden">
+          <div class="flex items-center gap-2 text-center sm:text-left">
+            <span class="text-lg">⚠️</span>
+            <span><strong>鏡頭畫面全黑</strong>：請確認筆電鏡頭防窺開關/滑蓋已開啟，或關閉 Teams/Zoom 等佔用軟體。</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnSwitchCameraQuick" type="button" class="bg-white text-red-700 font-bold px-3 py-1 rounded-xl text-xs hover:bg-red-50 transition">切換鏡頭</button>
+            <button id="btnUseDemoPhotoQuick" type="button" class="bg-amber-400 text-amber-950 font-bold px-3 py-1 rounded-xl text-xs hover:bg-amber-300 transition">載入示範照</button>
+          </div>
+        </div>
+
         <!-- Camera Off / Permission Notice -->
-        <div id="cameraNotice" class="absolute inset-0 bg-stone-800 text-white flex flex-col items-center justify-center p-6 text-center z-20 hidden">
-          <span class="text-5xl mb-4">📷</span>
-          <p class="text-lg md:text-xl font-bold mb-2">請允許瀏覽器使用相機權限</p>
-          <p class="text-sm text-stone-300 max-w-md mb-6">點擊下方按鈕以啟用 iPad / 平板鏡頭開始拍照。</p>
-          <div class="flex flex-wrap gap-3 justify-center">
-            <button id="btnRequestCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg">啟動相機</button>
-            <label class="bg-stone-700 hover:bg-stone-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg cursor-pointer">
-              上傳照片測試
+        <div id="cameraNotice" class="absolute inset-0 bg-stone-800/95 text-white flex flex-col items-center justify-center p-6 text-center z-30 hidden">
+          <span class="text-5xl mb-3">📷</span>
+          <p id="cameraNoticeTitle" class="text-lg md:text-xl font-bold mb-1.5">相機尚未啟動或需要授權</p>
+          <p id="cameraNoticeDesc" class="text-sm text-stone-300 max-w-md mb-5">點擊下方按鈕以啟用 iPad / 平板鏡頭，或直接載入示範照片開始拍照體驗！</p>
+          <div class="flex flex-wrap gap-2.5 justify-center">
+            <button id="btnRequestCamera" type="button" class="bg-amber-500 hover:bg-amber-600 text-white text-sm md:text-base font-bold px-5 py-2.5 rounded-2xl shadow-lg transition active:scale-95">重新啟動鏡頭</button>
+            <button id="btnUseDemoPhotoNotice" type="button" class="bg-teal-600 hover:bg-teal-700 text-white text-sm md:text-base font-bold px-5 py-2.5 rounded-2xl shadow-lg transition active:scale-95">🌟 載入示範照</button>
+            <label class="bg-stone-700 hover:bg-stone-600 text-white text-sm md:text-base font-bold px-5 py-2.5 rounded-2xl shadow-lg cursor-pointer transition active:scale-95">
+              📁 上傳相片
               <input type="file" id="inputTestPhoto" accept="image/*" class="hidden">
             </label>
           </div>
         </div>
+      </div>
+
+      <!-- Viewfinder Direct Utility Toolbar -->
+      <div class="mt-3 flex flex-wrap items-center justify-center gap-2.5 w-full text-xs md:text-sm font-bold">
+        <button id="btnRestartCam" type="button" class="bg-stone-800/80 hover:bg-stone-900 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+          <span>📷</span>
+          <span>啟動/重啟相機</span>
+        </button>
+        
+        <button id="btnSwitchCamDirect" type="button" class="bg-amber-700/80 hover:bg-amber-800 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+          <span>🔄</span>
+          <span id="txtSwitchCam">切換鏡頭 (前/後鏡頭)</span>
+        </button>
+        
+        <button id="btnUsePresetDemo" type="button" class="bg-teal-700/80 hover:bg-teal-800 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+          <span>🌟</span>
+          <span>載入示範照片測試</span>
+        </button>
+
+        <label class="bg-stone-600/80 hover:bg-stone-700 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow cursor-pointer transition">
+          <span>📁</span>
+          <span>上傳相片測試</span>
+          <input type="file" id="inputCustomPhoto" accept="image/*" class="hidden">
+        </label>
       </div>
 
       <!-- Live Controls (Shutter Button & Countdown Options) -->
@@ -510,22 +560,137 @@
       } catch (e) {}
     }
 
-    // --- Initialize Camera Stream ---
-    async function initCamera() {
+    // --- Camera & Video State Variables ---
+    let availableVideoDevices = [];
+    let currentDeviceIndex = 0;
+    let cameraWatchdogTimer = null;
+
+    // --- Enumerate all video input devices (front/back/USB webcams) ---
+    async function updateCameraDeviceList() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
       try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        availableVideoDevices = devices.filter(d => d.kind === 'videoinput');
+        const txtSwitch = document.getElementById('txtSwitchCam');
+        if (txtSwitch) {
+          if (availableVideoDevices.length > 1) {
+            txtSwitch.innerText = `切換鏡頭 (${availableVideoDevices.length} 個裝置可用)`;
+          } else {
+            txtSwitch.innerText = '切換鏡頭 (前/後鏡頭)';
+          }
+        }
+      } catch (e) {
+        console.warn('Enumerate devices error:', e);
+      }
+    }
+
+    // --- Switch to Next Camera Device ---
+    async function switchCamera() {
+      if (availableVideoDevices.length > 1) {
+        currentDeviceIndex = (currentDeviceIndex + 1) % availableVideoDevices.length;
+        const targetDevice = availableVideoDevices[currentDeviceIndex];
+        console.log('Switching to camera:', targetDevice.label || targetDevice.deviceId);
+        await initCamera(targetDevice.deviceId);
+      } else {
+        // Toggle front / back facing mode
+        STATE.facingMode = (STATE.facingMode === 'user') ? 'environment' : 'user';
+        if (STATE.facingMode === 'environment') {
+          videoPreview.classList.remove('mirror-mode');
+          STATE.isMirror = false;
+          checkMirrorMode.checked = false;
+        } else {
+          videoPreview.classList.add('mirror-mode');
+          STATE.isMirror = true;
+          checkMirrorMode.checked = true;
+        }
+        await initCamera();
+      }
+    }
+
+    // --- Show Tap-to-Start Camera Overlay ---
+    function showTapToStartOverlay() {
+      const tapOverlay = document.getElementById('tapToStartOverlay');
+      if (tapOverlay) tapOverlay.classList.remove('hidden');
+    }
+
+    // --- Hide Tap-to-Start Camera Overlay ---
+    function hideTapToStartOverlay() {
+      const tapOverlay = document.getElementById('tapToStartOverlay');
+      if (tapOverlay) tapOverlay.classList.add('hidden');
+    }
+
+    // --- Load Preset Demo Senior Citizen Graduation Photo ---
+    function usePresetDemoPhoto() {
+      demoPhotoPreview.src = 'frames/demo_seniors.jpg';
+      demoPhotoPreview.classList.remove('hidden');
+      videoPreview.classList.add('hidden');
+      hideTapToStartOverlay();
+      document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+      cameraNotice.classList.add('hidden');
+      STATE.demoImage = demoPhotoPreview;
+      
+      const badgeDot = document.getElementById('camStatusDot');
+      const badgeText = document.getElementById('camStatusText');
+      if (badgeDot && badgeText) {
+        badgeDot.className = 'w-2 h-2 rounded-full bg-blue-400';
+        badgeText.innerText = '使用示範學員合照 (免鏡頭測試)';
+      }
+    }
+
+    // --- Initialize Camera Stream ---
+    async function initCamera(preferredDeviceId = null) {
+      if (cameraWatchdogTimer) clearInterval(cameraWatchdogTimer);
+      document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+
+      // 1. Check browser mediaDevices support & Secure Context (HTTPS)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const isHttp = location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
+        const badgeDot = document.getElementById('camStatusDot');
+        const badgeText = document.getElementById('camStatusText');
+        if (badgeDot && badgeText) {
+          badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
+          badgeText.innerText = '瀏覽器未開放相機權限';
+        }
+        cameraNotice.classList.remove('hidden');
+        document.getElementById('cameraNoticeTitle').innerText = isHttp ? '需要 HTTPS 安全連線' : '瀏覽器不支援直接啟動相機';
+        document.getElementById('cameraNoticeDesc').innerText = isHttp 
+          ? '相機權限在多數平板與手機上僅能在 HTTPS 網址執行。請透過 GitHub Pages 正式網址開啟，或點擊下方直接載入示範照片體驗！'
+          : '請確認使用 Chrome / Safari / Edge 瀏覽器，或點擊下方載入示範照片體驗。';
+        showTapToStartOverlay();
+        return;
+      }
+
+      try {
+        // 2. Stop any existing tracks cleanly
         if (STATE.stream) {
-          STATE.stream.getTracks().forEach(t => t.stop());
+          STATE.stream.getTracks().forEach(t => {
+            try { t.stop(); } catch(e) {}
+          });
           STATE.stream = null;
         }
 
-        let stream = null;
-        // Progressive constraint fallback to avoid NotReadableError on Windows / iPad
-        const tryConstraints = [
-          { video: { facingMode: STATE.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } },
-          { video: { facingMode: STATE.facingMode } },
-          { video: true }
-        ];
+        // 3. Configure video element essential attributes (Crucial for iOS Safari Autoplay)
+        videoPreview.muted = true;
+        videoPreview.defaultMuted = true;
+        videoPreview.playsInline = true;
+        videoPreview.setAttribute('muted', '');
+        videoPreview.setAttribute('playsinline', '');
+        videoPreview.setAttribute('webkit-playsinline', '');
+        videoPreview.setAttribute('autoplay', '');
 
+        // 4. Progressive constraint fallback
+        const tryConstraints = [];
+        if (preferredDeviceId) {
+          tryConstraints.push({ video: { deviceId: { exact: preferredDeviceId }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+          tryConstraints.push({ video: { deviceId: { exact: preferredDeviceId } } });
+        }
+        tryConstraints.push(
+          { video: { facingMode: STATE.facingMode, width: { ideal: 1280 }, height: { ideal: 720 } } },
+          { video: { facingMode: { ideal: STATE.facingMode } } },
+          { video: true }
+        );
+
+        let stream = null;
         let lastError = null;
         for (const c of tryConstraints) {
           try {
@@ -537,73 +702,99 @@
         }
 
         if (!stream) {
-          throw lastError || new Error('無法存取任何視訊串流');
+          throw lastError || new Error('無法取得任何視訊串流');
         }
 
         STATE.stream = stream;
+        STATE.demoImage = null;
+        demoPhotoPreview.classList.add('hidden');
+        videoPreview.classList.remove('hidden');
         videoPreview.srcObject = stream;
         
-        // Comprehensive playback and health monitoring
-        videoPreview.onloadedmetadata = () => {
-          videoPreview.play().catch(e => console.warn('Play error:', e));
-        };
+        // 5. Explicit play with Autoplay catch
+        try {
+          await videoPreview.play();
+          hideTapToStartOverlay();
+          cameraNotice.classList.add('hidden');
+        } catch (playErr) {
+          console.warn('Video play blocked by browser autoplay policy:', playErr);
+          showTapToStartOverlay();
+        }
+
+        // 6. Hook stream event listeners
         videoPreview.onplaying = () => {
+          hideTapToStartOverlay();
+          cameraNotice.classList.add('hidden');
           const badgeDot = document.getElementById('camStatusDot');
           const badgeText = document.getElementById('camStatusText');
           if (badgeDot && badgeText) {
             badgeDot.className = 'w-2 h-2 rounded-full bg-green-400';
-            badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
+            badgeText.innerText = `鏡頭運作中 (${videoPreview.videoWidth || 1280}x${videoPreview.videoHeight || 720})`;
           }
         };
 
-        // If the browser pauses the video, auto-resume immediately
         videoPreview.onpause = () => {
-          console.warn('Video stream paused by browser, auto-resuming...');
-          if (STATE.stream) {
-            videoPreview.play().catch(() => {});
+          if (STATE.stream && !STATE.demoImage) {
+            videoPreview.play().catch(() => showTapToStartOverlay());
           }
         };
 
-        // Track ended handler (e.g. hardware dropped)
         stream.getVideoTracks().forEach(track => {
           track.onended = () => {
-            console.warn('Camera video track ended unexpectedly!');
-            const badgeDot = document.getElementById('camStatusDot');
-            const badgeText = document.getElementById('camStatusText');
-            STATE.reconnectCount = (STATE.reconnectCount || 0) + 1;
-            if (STATE.reconnectCount <= 5) {
-              if (badgeDot && badgeText) {
-                badgeDot.className = 'w-2 h-2 rounded-full bg-yellow-400 animate-pulse';
-                badgeText.innerText = `鏡頭中斷，自動重新連線中 (${STATE.reconnectCount}/5)...`;
-              }
-              STATE.stream = null;
-              setTimeout(initCamera, 1000);
-            } else if (badgeDot && badgeText) {
-              badgeDot.className = 'w-2 h-2 rounded-full bg-red-500';
-              badgeText.innerText = '鏡頭被系統反覆中止，請見說明';
-            }
+            console.warn('Video track ended, attempting reconnect...');
+            STATE.stream = null;
+            showTapToStartOverlay();
+            setTimeout(initCamera, 1200);
           };
           track.onmute = () => {
-            console.warn('Camera video track muted by system/hardware!');
-            const badgeDot = document.getElementById('camStatusDot');
-            const badgeText = document.getElementById('camStatusText');
-            if (badgeDot && badgeText) {
-              badgeDot.className = 'w-2 h-2 rounded-full bg-yellow-500';
-              badgeText.innerText = '鏡頭無畫面輸出 (Muted/硬體節能中)';
-            }
+            console.warn('Video track muted by OS or hardware privacy switch!');
+            document.getElementById('cameraBlackWarning')?.classList.remove('hidden');
           };
           track.onunmute = () => {
-            const badgeDot = document.getElementById('camStatusDot');
-            const badgeText = document.getElementById('camStatusText');
-            if (badgeDot && badgeText) {
-              badgeDot.className = 'w-2 h-2 rounded-full bg-green-400';
-              badgeText.innerText = `鏡頭恢復運作 (${videoPreview.videoWidth}x${videoPreview.videoHeight})`;
-            }
+            document.getElementById('cameraBlackWarning')?.classList.add('hidden');
           };
         });
 
-        await videoPreview.play().catch(() => {});
-        cameraNotice.classList.add('hidden');
+        // 7. Enumerate devices for multi-camera support
+        await updateCameraDeviceList();
+
+        // 8. Watchdog: Check if the camera delivers actual video frames (not black / 0x0)
+        let checkCount = 0;
+        cameraWatchdogTimer = setInterval(() => {
+          checkCount++;
+          if (STATE.demoImage) {
+            clearInterval(cameraWatchdogTimer);
+            return;
+          }
+          if (videoPreview.videoWidth > 0 && !videoPreview.paused) {
+            hideTapToStartOverlay();
+            // Test 1-pixel frame luminance to detect closed privacy shutters
+            try {
+              const testCanvas = document.createElement('canvas');
+              testCanvas.width = 16;
+              testCanvas.height = 16;
+              const tctx = testCanvas.getContext('2d');
+              tctx.drawImage(videoPreview, 0, 0, 16, 16);
+              const pdata = tctx.getImageData(0, 0, 16, 16).data;
+              let sum = 0;
+              for (let i = 0; i < pdata.length; i += 4) {
+                sum += (pdata[i] + pdata[i+1] + pdata[i+2]) / 3;
+              }
+              const avgLum = sum / (pdata.length / 4);
+              if (avgLum < 2.0 && checkCount >= 3) {
+                // Camera is streaming completely black pixels (likely privacy shutter closed or blocked)
+                document.getElementById('cameraBlackWarning')?.classList.remove('hidden');
+              } else {
+                document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+              }
+            } catch(e) {}
+            if (checkCount >= 5) clearInterval(cameraWatchdogTimer);
+          } else if (checkCount >= 3) {
+            // Still 0x0 or paused
+            showTapToStartOverlay();
+          }
+        }, 800);
+
       } catch (err) {
         console.error('Camera access failed:', err);
         const badgeDot = document.getElementById('camStatusDot');
@@ -613,46 +804,47 @@
           badgeText.innerText = '鏡頭未啟動或被佔用';
         }
         cameraNotice.classList.remove('hidden');
-        cameraNotice.innerHTML = `
-          <span class="text-5xl mb-4">⚠️</span>
-          <p class="text-lg md:text-xl font-bold mb-2">相機無法啟動</p>
-          <p class="text-sm text-stone-300 max-w-md mb-6">${err.name || '無法存取鏡頭'}：請關閉其他使用鏡頭的分頁或軟體，點擊下方重新啟動；或使用上傳照片測試。</p>
-          <div class="flex flex-wrap gap-3 justify-center">
-            <button id="btnRetryCamera" class="bg-amber-500 hover:bg-amber-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg">重新嘗試啟動</button>
-            <label class="bg-stone-700 hover:bg-stone-600 text-white text-base font-bold px-6 py-2.5 rounded-2xl shadow-lg cursor-pointer">
-              上傳照片測試
-              <input type="file" id="inputTestPhoto" accept="image/*" class="hidden">
-            </label>
-          </div>
-        `;
-        document.getElementById('btnRetryCamera')?.addEventListener('click', initCamera);
-        bindTestPhotoUpload();
+        showTapToStartOverlay();
+        
+        let errorDesc = '請關閉其他使用視訊鏡頭的分頁或軟體（如 Teams / Zoom / Line），點擊下方重新啟動；或使用示範照片測試。';
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          errorDesc = '相機授權被瀏覽器拒絕。請在網址列旁點擊「鎖頭」或「設定」圖示，允許使用相機權限後重試。';
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          errorDesc = '找不到視訊相機裝置。若為桌上型電腦，請插入 USB 視訊鏡頭，或直接點選「🌟 載入示範照片」。';
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+          errorDesc = '相機目前被其他應用程式（如 Teams / Zoom / 視訊開關）佔用，請關閉後點擊重新嘗試。';
+        }
+        document.getElementById('cameraNoticeTitle').innerText = err.name || '相機無法啟動';
+        document.getElementById('cameraNoticeDesc').innerText = errorDesc;
       }
     }
 
     // Support testing photo without webcam
     function bindTestPhotoUpload() {
-      const input = document.getElementById('inputTestPhoto');
-      if (!input) return;
-      input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const demoImg = document.getElementById('demoPhotoPreview');
-          demoImg.src = ev.target.result;
-          demoImg.classList.remove('hidden');
-          videoPreview.classList.add('hidden');
-          cameraNotice.classList.add('hidden');
-          STATE.demoImage = demoImg;
-          const badgeDot = document.getElementById('camStatusDot');
-          const badgeText = document.getElementById('camStatusText');
-          if (badgeDot && badgeText) {
-            badgeDot.className = 'w-2 h-2 rounded-full bg-blue-400';
-            badgeText.innerText = '使用上傳照片測試';
-          }
-        };
-        reader.readAsDataURL(file);
+      ['inputTestPhoto', 'inputCustomPhoto'].forEach(id => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        input.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            demoPhotoPreview.src = ev.target.result;
+            demoPhotoPreview.classList.remove('hidden');
+            videoPreview.classList.add('hidden');
+            hideTapToStartOverlay();
+            document.getElementById('cameraBlackWarning')?.classList.add('hidden');
+            cameraNotice.classList.add('hidden');
+            STATE.demoImage = demoPhotoPreview;
+            const badgeDot = document.getElementById('camStatusDot');
+            const badgeText = document.getElementById('camStatusText');
+            if (badgeDot && badgeText) {
+              badgeDot.className = 'w-2 h-2 rounded-full bg-blue-400';
+              badgeText.innerText = '使用自訂上傳照片';
+            }
+          };
+          reader.readAsDataURL(file);
+        });
       });
     }
 
@@ -936,15 +1128,28 @@
       playShutterSound();
 
       // 2. 擷取原始相機影像存至 rawCaptureCanvas
-      const sourceEl = STATE.demoImage || videoPreview;
-      const vw = sourceEl.videoWidth || sourceEl.naturalWidth || 1920;
-      const vh = sourceEl.videoHeight || sourceEl.naturalHeight || 1080;
+      let sourceEl = STATE.demoImage || videoPreview;
+      let vw = sourceEl.videoWidth || sourceEl.naturalWidth || 0;
+      let vh = sourceEl.videoHeight || sourceEl.naturalHeight || 0;
+
+      // 防呆保護：若鏡頭未啟動或解析度為 0 且無示範照，自動切換至示範照避免產出黑屏相片
+      if (vw === 0 && !STATE.demoImage) {
+        console.warn('Camera video dimensions are 0, falling back to preset demo seniors photo');
+        usePresetDemoPhoto();
+        sourceEl = STATE.demoImage;
+        vw = sourceEl.naturalWidth || 1800;
+        vh = sourceEl.naturalHeight || 1200;
+      }
+      if (vw === 0) {
+        vw = 1800;
+        vh = 1200;
+      }
 
       const rawCanvas = document.createElement('canvas');
       rawCanvas.width = vw;
       rawCanvas.height = vh;
       const rawCtx = rawCanvas.getContext('2d');
-      if (STATE.isMirror) {
+      if (STATE.isMirror && !STATE.demoImage) {
         rawCtx.translate(vw, 0);
         rawCtx.scale(-1, 1);
       }
@@ -1076,23 +1281,29 @@
       }, 1000);
     }
 
-    // --- Switch Front/Back Camera ---
-    btnSwitchCamera.addEventListener('click', () => {
-      STATE.facingMode = (STATE.facingMode === 'user') ? 'environment' : 'user';
-      // If back camera, usually don't mirror
-      if (STATE.facingMode === 'environment') {
-        videoPreview.classList.remove('mirror-mode');
-        STATE.isMirror = false;
-        checkMirrorMode.checked = false;
-      } else {
-        videoPreview.classList.add('mirror-mode');
-        STATE.isMirror = true;
-        checkMirrorMode.checked = true;
-      }
+    // --- Camera & Utility Toolbar Event Listeners ---
+    btnSwitchCamera.addEventListener('click', switchCamera);
+    document.getElementById('btnSwitchCamDirect')?.addEventListener('click', switchCamera);
+    document.getElementById('btnSwitchCameraQuick')?.addEventListener('click', switchCamera);
+    document.getElementById('btnRestartCam')?.addEventListener('click', () => initCamera());
+    btnRequestCamera.addEventListener('click', () => initCamera());
+
+    // Bind all demo photo buttons
+    document.getElementById('btnUsePresetDemo')?.addEventListener('click', usePresetDemoPhoto);
+    document.getElementById('btnUseDemoFromTap')?.addEventListener('click', (e) => { e.stopPropagation(); usePresetDemoPhoto(); });
+    document.getElementById('btnUseDemoPhotoNotice')?.addEventListener('click', usePresetDemoPhoto);
+    document.getElementById('btnUseDemoPhotoQuick')?.addEventListener('click', usePresetDemoPhoto);
+
+    // Tap on viewfinder or tap-overlay triggers camera start (guaranteed user gesture)
+    document.getElementById('tapToStartOverlay')?.addEventListener('click', (e) => {
+      e.stopPropagation();
       initCamera();
     });
-
-    btnRequestCamera.addEventListener('click', initCamera);
+    document.getElementById('viewfinderBox')?.addEventListener('click', (e) => {
+      if ((videoPreview.paused || !STATE.stream) && !STATE.demoImage) {
+        initCamera();
+      }
+    });
 
     // --- Settings Modal Logic ---
     btnOpenSettings.addEventListener('click', () => {
@@ -1125,6 +1336,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       inputCloudName.value = STATE.cloudName;
       inputUploadPreset.value = STATE.uploadPreset;
+      bindTestPhotoUpload();
       initCamera();
     });
   </script>
