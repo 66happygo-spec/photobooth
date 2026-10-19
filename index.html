@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>2026 外埔長青學院結業典禮 - 拍貼機</title>
+  <title>2026 外埔長青學苑結業典禮 - 拍貼機</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -55,7 +55,7 @@
     <div class="flex items-center space-x-3">
       <span class="text-3xl">🎓</span>
       <div>
-        <h1 class="text-xl md:text-2xl font-bold tracking-wide">2026 外埔長青學院結業典禮</h1>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wide">2026 外埔長青學苑結業典禮</h1>
         <p class="text-xs md:text-sm text-amber-100">活到老・學到老・拍下幸福紀念時刻</p>
       </div>
     </div>
@@ -92,7 +92,7 @@
         <img id="demoPhotoPreview" class="absolute inset-0 w-full h-full object-cover mirror-mode z-0 hidden" alt="示範相片">
 
         <!-- Active Frame Overlay on Live Preview -->
-        <img id="liveFrameOverlay" src="frames/frame_flower_garden.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
+        <img id="liveFrameOverlay" src="frames/frame_warm_sunshine.png" alt="相框覆蓋" class="absolute inset-0 w-full h-full object-fill pointer-events-none z-10">
         
         <!-- Big Countdown Number Display -->
         <div id="countdownBox" class="absolute inset-0 flex items-center justify-center pointer-events-none z-30 hidden">
@@ -139,30 +139,30 @@
 
       <!-- Frame Selector (Live pre-select or post-select) -->
       <div class="mt-6 w-full max-w-4xl">
-        <p class="text-center font-bold text-amber-900 text-base md:text-lg mb-3">🎨 點選更換外框（3 款任選）：</p>
+        <p class="text-center font-bold text-amber-900 text-base md:text-lg mb-3">🎨 點選更換外框（3 款冬季活力主題）：</p>
         <div class="grid grid-cols-3 gap-3 md:gap-5">
           <!-- Frame 1 -->
-          <button data-frame="frames/frame_flower_garden.png" class="frame-thumb-btn border-4 border-amber-500 bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
-            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
-              <img src="frames/frame_flower_garden.png" class="w-full h-full object-contain">
+          <button data-frame="frames/frame_warm_sunshine.png" class="frame-thumb-btn border-4 border-amber-500 bg-white rounded-2xl p-2.5 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-amber-50 rounded-xl overflow-hidden flex items-center justify-center p-1">
+              <img src="frames/frame_warm_sunshine.png" class="w-full h-full object-contain">
             </div>
-            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">1. 溫馨花草框</span>
+            <span class="mt-2 text-xs md:text-sm font-black text-amber-900">☀️ 冬日暖陽・金色活力</span>
           </button>
           
           <!-- Frame 2 -->
-          <button data-frame="frames/frame_chalkboard.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
-            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
-              <img src="frames/frame_chalkboard.png" class="w-full h-full object-contain">
+          <button data-frame="frames/frame_festive_celebration.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2.5 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-rose-50 rounded-xl overflow-hidden flex items-center justify-center p-1">
+              <img src="frames/frame_festive_celebration.png" class="w-full h-full object-contain">
             </div>
-            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">2. 校園黑板框</span>
+            <span class="mt-2 text-xs md:text-sm font-black text-rose-900">🌸 喜慶溫馨・新春紅韻</span>
           </button>
           
           <!-- Frame 3 -->
-          <button data-frame="frames/frame_blue_ocean.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
-            <div class="aspect-[3/2] w-full bg-stone-100 rounded-xl overflow-hidden flex items-center justify-center">
-              <img src="frames/frame_blue_ocean.png" class="w-full h-full object-contain">
+          <button data-frame="frames/frame_fresh_hope.png" class="frame-thumb-btn border-4 border-transparent bg-white rounded-2xl p-2.5 shadow-md hover:shadow-xl transition transform active:scale-95 flex flex-col items-center">
+            <div class="aspect-[3/2] w-full bg-cyan-50 rounded-xl overflow-hidden flex items-center justify-center p-1">
+              <img src="frames/frame_fresh_hope.png" class="w-full h-full object-contain">
             </div>
-            <span class="mt-1.5 text-xs md:text-sm font-bold text-slate-700">3. 藍天海洋框</span>
+            <span class="mt-2 text-xs md:text-sm font-black text-teal-900">🌱 晴空希望・生機繁花</span>
           </button>
         </div>
       </div>
@@ -170,19 +170,89 @@
 
     <!-- STEP 3 & 4: RESULT, PREVIEW & QR CODE SHARE -->
     <div id="resultSection" class="w-full max-w-5xl flex flex-col items-center hidden">
-      <div class="bg-white rounded-3xl shadow-2xl p-4 md:p-8 border-4 border-amber-300 w-full flex flex-col lg:flex-row items-center gap-8">
+      <div class="bg-white rounded-3xl shadow-2xl p-4 md:p-7 border-4 border-amber-300 w-full flex flex-col lg:flex-row items-start gap-6 lg:gap-8">
         
-        <!-- Left: Synthesized 4x6 Result Image -->
+        <!-- Left: Synthesized 4x6 Result Image & Style / Frame Toggles -->
         <div class="w-full lg:w-3/5 flex flex-col items-center">
+          <!-- 4x6 Output Preview Image -->
           <div class="relative w-full rounded-2xl overflow-hidden shadow-xl border-4 border-amber-200 aspect-[3/2] bg-stone-900">
             <img id="resultImagePreview" class="w-full h-full object-contain" alt="合成照片預覽">
           </div>
-          <div class="flex items-center gap-3 mt-4 w-full">
-            <button id="btnRetakePhoto" class="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-800 py-3.5 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 transition">
+
+          <!-- Style Selection Bar -->
+          <div class="w-full mt-4 bg-amber-50/90 p-3.5 rounded-2xl border-2 border-amber-300 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs md:text-sm font-black text-amber-950 flex items-center gap-1.5">
+                <span>✨</span> 選擇照片風格（即時切換預覽）：
+              </span>
+              <span class="text-[11px] font-bold text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full">
+                長輩一按臉色變紅潤 ✨
+              </span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <!-- Style 1: Natural -->
+              <button type="button" data-style="natural" class="result-style-btn active py-2.5 px-1.5 rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center transition active:scale-95 border-2 border-amber-500 bg-amber-500 text-white shadow-md">
+                <span class="text-lg md:text-xl">🌿</span>
+                <span class="mt-0.5 font-bold">原始自然</span>
+                <span class="text-[10px] opacity-90 font-normal">真實原貌</span>
+              </button>
+              
+              <!-- Style 2: Beauty -->
+              <button type="button" data-style="beauty" class="result-style-btn py-2.5 px-1.5 rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center transition active:scale-95 border-2 border-stone-200 bg-white text-stone-700 hover:border-amber-400">
+                <span class="text-lg md:text-xl">🌸</span>
+                <span class="mt-0.5 font-bold">粉嫩微美肌</span>
+                <span class="text-[10px] text-stone-500 font-normal">紅潤氣色・柔膚</span>
+              </button>
+              
+              <!-- Style 3: Portrait -->
+              <button type="button" data-style="portrait" class="result-style-btn py-2.5 px-1.5 rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center transition active:scale-95 border-2 border-stone-200 bg-white text-stone-700 hover:border-amber-400">
+                <span class="text-lg md:text-xl">📸</span>
+                <span class="mt-0.5 font-bold">人像景深</span>
+                <span class="text-[10px] text-stone-500 font-normal">背景柔焦景深</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Post-Capture Frame Switcher -->
+          <div class="w-full mt-3 bg-stone-50 p-3 rounded-2xl border border-stone-200 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs md:text-sm font-black text-stone-800 flex items-center gap-1.5">
+                <span>🎨</span> 更換外框（3 款冬季活力）：
+              </span>
+              <span class="text-[11px] text-stone-500">拍完亦可自由換框</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <!-- Frame 1 -->
+              <button type="button" data-result-frame="frames/frame_warm_sunshine.png" class="result-frame-btn border-2 border-amber-500 bg-white rounded-xl p-1.5 shadow-sm transition active:scale-95 flex flex-col items-center">
+                <div class="aspect-[3/2] w-full bg-amber-50 rounded-lg overflow-hidden flex items-center justify-center p-0.5">
+                  <img src="frames/frame_warm_sunshine.png" class="w-full h-full object-contain">
+                </div>
+                <span class="mt-1 text-[11px] font-bold text-amber-900 truncate">☀️ 冬日暖陽</span>
+              </button>
+              <!-- Frame 2 -->
+              <button type="button" data-result-frame="frames/frame_festive_celebration.png" class="result-frame-btn border-2 border-transparent bg-white rounded-xl p-1.5 shadow-sm transition active:scale-95 flex flex-col items-center">
+                <div class="aspect-[3/2] w-full bg-rose-50 rounded-lg overflow-hidden flex items-center justify-center p-0.5">
+                  <img src="frames/frame_festive_celebration.png" class="w-full h-full object-contain">
+                </div>
+                <span class="mt-1 text-[11px] font-bold text-rose-900 truncate">🌸 喜慶溫馨</span>
+              </button>
+              <!-- Frame 3 -->
+              <button type="button" data-result-frame="frames/frame_fresh_hope.png" class="result-frame-btn border-2 border-transparent bg-white rounded-xl p-1.5 shadow-sm transition active:scale-95 flex flex-col items-center">
+                <div class="aspect-[3/2] w-full bg-cyan-50 rounded-lg overflow-hidden flex items-center justify-center p-0.5">
+                  <img src="frames/frame_fresh_hope.png" class="w-full h-full object-contain">
+                </div>
+                <span class="mt-1 text-[11px] font-bold text-teal-900 truncate">🌱 晴空希望</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="flex items-center gap-3 mt-3.5 w-full">
+            <button id="btnRetakePhoto" class="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-800 py-3 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 transition">
               <span>🔄</span>
               <span>重拍一張</span>
             </button>
-            <button id="btnSaveToDevice" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3.5 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 shadow-md transition">
+            <button id="btnSaveToDevice" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-3 px-4 rounded-2xl text-base md:text-lg font-bold flex items-center justify-center space-x-2 shadow-md transition">
               <span>💾</span>
               <span>下載相片</span>
             </button>
@@ -190,7 +260,7 @@
         </div>
 
         <!-- Right: QR Code for Mobile Phones -->
-        <div class="w-full lg:w-2/5 flex flex-col items-center text-center p-4 bg-amber-50/80 rounded-2xl border-2 border-amber-200">
+        <div class="w-full lg:w-2/5 flex flex-col items-center text-center p-5 bg-amber-50/80 rounded-2xl border-2 border-amber-200 sticky top-4">
           <h2 class="text-xl md:text-2xl font-black text-amber-950 flex items-center justify-center gap-2 mb-2">
             <span>📱</span> 手機掃描立即存檔
           </h2>
@@ -208,9 +278,9 @@
           </div>
 
           <!-- Auto Restart Countdown -->
-          <div class="mt-5 pt-4 border-t border-amber-200 w-full flex items-center justify-between">
+          <div class="mt-6 pt-4 border-t border-amber-200 w-full flex items-center justify-between">
             <span class="text-xs text-stone-500"><span id="resetSeconds">45</span> 秒後自動返回拍照</span>
-            <button id="btnNextGuest" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow transition">
+            <button id="btnNextGuest" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow transition">
               下一位拍 ➡️
             </button>
           </div>
@@ -274,7 +344,7 @@
 
   <!-- Footer -->
   <footer class="py-2 text-center text-xs text-amber-800/80 bg-amber-100/50">
-    外埔長青學院結業典禮專用拍貼機 ｜ 支援 iPad / 觸控螢幕 / 平板全螢幕
+    外埔長青學苑結業典禮專用拍貼機 ｜ 支援 iPad / 觸控螢幕 / 平板全螢幕
   </footer>
 
   <!-- Application Logic -->
@@ -282,25 +352,42 @@
     // --- Application State ---
     const STATE = {
       countdownSeconds: 3,
-      selectedFrame: 'frames/frame_flower_garden.png',
+      selectedFrame: 'frames/frame_warm_sunshine.png',
+      selectedStyle: 'beauty', // 'natural' | 'beauty' | 'portrait'
       stream: null,
       facingMode: 'user',
       isMirror: true,
+      rawCaptureCanvas: null,
       capturedBlob: null,
       capturedDataUrl: null,
       autoResetTimer: null,
-      cloudName: localStorage.getItem('cloudinary_cloud_name') || '',
-      uploadPreset: localStorage.getItem('cloudinary_upload_preset') || '',
-      // Precise hole geometry measured at 1800 x 1200 HD resolution
-      // frame_flower_garden: x=[303, 1511], y=[370, 990]
-      // frame_chalkboard:     x=[277, 1526], y=[364, 1008]
-      // frame_blue_ocean:     x=[326, 1529], y=[316, 1044]
+      uploadDebounceTimer: null,
+      cloudName: localStorage.getItem('cloudinary_cloud_name') || 'wwbs37co',
+      uploadPreset: localStorage.getItem('cloudinary_upload_preset') || 'w1reicnp',
+      // Unified 1800 x 1200 frame hole geometry (hole_x: 240, hole_y: 280, hole_w: 1320, hole_h: 780)
       frameHoles: {
-        'frames/frame_flower_garden.png': { rx: 303/1800, rw: 1209/1800, ry: 370/1200, rh: 621/1200 },
-        'frames/frame_chalkboard.png':     { rx: 277/1800, rw: 1250/1800, ry: 364/1200, rh: 645/1200 },
-        'frames/frame_blue_ocean.png':     { rx: 326/1800, rw: 1204/1800, ry: 316/1200, rh: 729/1200 }
+        'frames/frame_warm_sunshine.png':       { rx: 240/1800, rw: 1320/1800, ry: 280/1200, rh: 780/1200 },
+        'frames/frame_festive_celebration.png': { rx: 240/1800, rw: 1320/1800, ry: 280/1200, rh: 780/1200 },
+        'frames/frame_fresh_hope.png':          { rx: 240/1800, rw: 1320/1800, ry: 280/1200, rh: 780/1200 }
       }
     };
+
+    // Preload frames into memory for instantaneous switching
+    const FRAME_CACHE = {};
+    function preloadFrames() {
+      const frames = [
+        'frames/frame_warm_sunshine.png',
+        'frames/frame_festive_celebration.png',
+        'frames/frame_fresh_hope.png'
+      ];
+      frames.forEach(src => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = src;
+        img.onload = () => { FRAME_CACHE[src] = img; };
+      });
+    }
+    preloadFrames();
 
     // --- DOM Elements ---
     const videoPreview = document.getElementById('videoPreview');
@@ -515,25 +602,92 @@
       });
     }
 
-    // --- Frame Switching ---
+    // --- UI Helper Functions ---
+    function updatePreCaptureFrameButtonsUI() {
+      document.querySelectorAll('.frame-thumb-btn').forEach(b => {
+        const f = b.getAttribute('data-frame');
+        if (f === STATE.selectedFrame) {
+          b.classList.remove('border-transparent');
+          b.classList.add('border-amber-500');
+        } else {
+          b.classList.remove('border-amber-500');
+          b.classList.add('border-transparent');
+        }
+      });
+    }
+
+    function updateResultFrameButtonsUI() {
+      document.querySelectorAll('.result-frame-btn').forEach(b => {
+        const f = b.getAttribute('data-result-frame');
+        if (f === STATE.selectedFrame) {
+          b.classList.remove('border-transparent');
+          b.classList.add('border-amber-500');
+        } else {
+          b.classList.remove('border-amber-500');
+          b.classList.add('border-transparent');
+        }
+      });
+    }
+
+    function updateStyleButtonsUI() {
+      document.querySelectorAll('.result-style-btn').forEach(b => {
+        const s = b.getAttribute('data-style');
+        if (s === STATE.selectedStyle) {
+          b.classList.remove('border-stone-200', 'bg-white', 'text-stone-700');
+          b.classList.add('border-amber-500', 'bg-amber-500', 'text-white', 'shadow-md');
+        } else {
+          b.classList.remove('border-amber-500', 'bg-amber-500', 'text-white', 'shadow-md');
+          b.classList.add('border-stone-200', 'bg-white', 'text-stone-700');
+        }
+      });
+    }
+
+    // --- Frame Switching (Pre-Capture View) ---
     document.querySelectorAll('.frame-thumb-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        document.querySelectorAll('.frame-thumb-btn').forEach(b => {
-          b.classList.remove('border-amber-500');
-          b.classList.add('border-transparent');
-        });
-        btn.classList.remove('border-transparent');
-        btn.classList.add('border-amber-500');
-        
         const frameSrc = btn.getAttribute('data-frame');
         STATE.selectedFrame = frameSrc;
         liveFrameOverlay.src = frameSrc;
+        updatePreCaptureFrameButtonsUI();
+        updateResultFrameButtonsUI();
 
         // Ensure video playback is never paused when clicking UI
         if (videoPreview.paused && STATE.stream) {
           videoPreview.play().catch(() => {});
         }
+      });
+    });
+
+    // --- Frame Switching (Result View) ---
+    document.querySelectorAll('.result-frame-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const frameSrc = btn.getAttribute('data-result-frame');
+        if (STATE.selectedFrame === frameSrc) return;
+        STATE.selectedFrame = frameSrc;
+        liveFrameOverlay.src = frameSrc;
+        updatePreCaptureFrameButtonsUI();
+        updateResultFrameButtonsUI();
+
+        await renderSynthesizedPhoto();
+        scheduleCloudUpload();
+        startAutoResetTimer(45);
+      });
+    });
+
+    // --- Style Filter Switching (Result View) ---
+    document.querySelectorAll('.result-style-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const style = btn.getAttribute('data-style');
+        if (STATE.selectedStyle === style) return;
+        STATE.selectedStyle = style;
+        updateStyleButtonsUI();
+
+        await renderSynthesizedPhoto();
+        scheduleCloudUpload();
+        startAutoResetTimer(45);
       });
     });
 
@@ -575,72 +729,180 @@
       }, 1000);
     });
 
-    // --- Take Photo and Synthesize 4x6 Picture ---
-    async function takePhoto() {
-      // 1. Shutter flash & sound
-      flashOverlay.classList.add('shutter-flash');
-      setTimeout(() => flashOverlay.classList.remove('shutter-flash'), 350);
-      playShutterSound();
-
-      // 2. Setup 1800 x 1200 Synthesis Canvas
+    // --- 1800 x 1200 4x6 Photo Synthesis Engine ---
+    async function renderSynthesizedPhoto() {
+      if (!STATE.rawCaptureCanvas) return null;
       const cw = synthesisCanvas.width;   // 1800
       const ch = synthesisCanvas.height;  // 1200
       const ctx = synthesisCanvas.getContext('2d');
       ctx.clearRect(0, 0, cw, ch);
 
-      // Load Frame Image
-      const frameImg = new Image();
-      frameImg.crossOrigin = 'anonymous';
-      frameImg.src = STATE.selectedFrame;
-      await new Promise(resolve => { frameImg.onload = resolve; });
-
-      // Calculate photo placement into frame inner transparent hole
-      const hole = STATE.frameHoles[STATE.selectedFrame] || { rx: 0.15, rw: 0.7, ry: 0.25, rh: 0.55 };
-      const holeX = hole.rx * cw;
-      const holeY = hole.ry * ch;
-      const holeW = hole.rw * cw;
-      const holeH = hole.rh * ch;
-
-      // Draw camera frame or demo photo into the hole area with cover/aspect ratio fitting
-      const sourceEl = STATE.demoImage || videoPreview;
-      const vw = sourceEl.videoWidth || sourceEl.naturalWidth || 1920;
-      const vh = sourceEl.videoHeight || sourceEl.naturalHeight || 1080;
-      
-      ctx.save();
-      // Clip to hole rectangle (with small bleed to avoid gaps)
-      ctx.beginPath();
-      ctx.rect(holeX - 10, holeY - 10, holeW + 20, holeH + 20);
-      ctx.clip();
-
-      // Calculate crop & scale for video to cover hole
-      const scale = Math.max(holeW / vw, holeH / vh);
-      const drawW = vw * scale;
-      const drawH = vh * scale;
-      const drawX = holeX + (holeW - drawW) / 2;
-      const drawY = holeY + (holeH - drawH) / 2;
-
-      if (STATE.isMirror) {
-        ctx.translate(drawX + drawW, drawY);
-        ctx.scale(-1, 1);
-        ctx.drawImage(sourceEl, 0, 0, drawW, drawH);
-      } else {
-        ctx.drawImage(sourceEl, drawX, drawY, drawW, drawH);
+      // 1. Get or Load Frame Image from cache
+      let frameImg = FRAME_CACHE[STATE.selectedFrame];
+      if (!frameImg) {
+        frameImg = new Image();
+        frameImg.crossOrigin = 'anonymous';
+        frameImg.src = STATE.selectedFrame;
+        await new Promise(resolve => { frameImg.onload = resolve; });
+        FRAME_CACHE[STATE.selectedFrame] = frameImg;
       }
+
+      // 2. Uniform hole placement for 1800 x 1200 HD frames
+      const hole = STATE.frameHoles[STATE.selectedFrame] || { rx: 240/1800, rw: 1320/1800, ry: 280/1200, rh: 780/1200 };
+      const holeX = Math.round(hole.rx * cw);
+      const holeY = Math.round(hole.ry * ch);
+      const holeW = Math.round(hole.rw * cw);
+      const holeH = Math.round(hole.rh * ch);
+
+      // 3. Render photo with selected style into offscreen hole canvas
+      const photoCanvas = document.createElement('canvas');
+      photoCanvas.width = holeW;
+      photoCanvas.height = holeH;
+      const pctx = photoCanvas.getContext('2d');
+
+      const raw = STATE.rawCaptureCanvas;
+      const scale = Math.max(holeW / raw.width, holeH / raw.height);
+      const dw = raw.width * scale;
+      const dh = raw.height * scale;
+      const dx = (holeW - dw) / 2;
+      const dy = (holeH - dh) / 2;
+
+      const style = STATE.selectedStyle || 'beauty';
+
+      if (style === 'natural') {
+        // [風格 1: 原始自然] - 真實無修飾原色原貌
+        pctx.drawImage(raw, dx, dy, dw, dh);
+      } else if (style === 'beauty') {
+        // [風格 2: 微美肌] - 提亮、微修細紋瑕疵、暖色紅潤好氣色
+        pctx.filter = 'brightness(1.06) contrast(1.02) saturate(1.12)';
+        pctx.drawImage(raw, dx, dy, dw, dh);
+        pctx.filter = 'none';
+
+        // 柔膚濾鏡層 (高斯模糊半透明疊加，撫平微皺紋並維持輪廓清晰)
+        const blurCanvas = document.createElement('canvas');
+        blurCanvas.width = holeW;
+        blurCanvas.height = holeH;
+        const bctx = blurCanvas.getContext('2d');
+        bctx.filter = 'blur(6px)';
+        bctx.drawImage(photoCanvas, 0, 0);
+
+        pctx.save();
+        pctx.globalAlpha = 0.36;
+        pctx.drawImage(blurCanvas, 0, 0);
+        pctx.restore();
+
+        // 暖粉紅潤氣色層（特別適合長輩，改善室內攝影氣色發黃或發白）
+        pctx.save();
+        pctx.globalCompositeOperation = 'screen';
+        pctx.fillStyle = 'rgba(255, 125, 120, 0.08)';
+        pctx.fillRect(0, 0, holeW, holeH);
+        pctx.restore();
+
+        // 柔和自然蘋果光
+        pctx.save();
+        pctx.globalCompositeOperation = 'soft-light';
+        pctx.fillStyle = 'rgba(255, 235, 220, 0.18)';
+        pctx.fillRect(0, 0, holeW, holeH);
+        pctx.restore();
+
+      } else if (style === 'portrait') {
+        // [風格 3: 人像景深] - 中心主體立體清晰，背景柔焦虛化
+        pctx.filter = 'contrast(1.04) saturate(1.06)';
+        pctx.drawImage(raw, dx, dy, dw, dh);
+        pctx.filter = 'none';
+
+        // 柔美光學散景景深層
+        const blurCanvas = document.createElement('canvas');
+        blurCanvas.width = holeW;
+        blurCanvas.height = holeH;
+        const bctx = blurCanvas.getContext('2d');
+        bctx.filter = 'blur(12px)';
+        bctx.drawImage(photoCanvas, 0, 0);
+
+        // 徑向漸層遮罩：中心清晰、向外柔和過渡至柔焦
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = holeW;
+        maskCanvas.height = holeH;
+        const mctx = maskCanvas.getContext('2d');
+        const maskGrad = mctx.createRadialGradient(
+          holeW * 0.5, holeH * 0.46, holeW * 0.22,
+          holeW * 0.5, holeH * 0.46, holeW * 0.50
+        );
+        maskGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        maskGrad.addColorStop(1, 'rgba(0,0,0,1)');
+        mctx.fillStyle = maskGrad;
+        mctx.fillRect(0, 0, holeW, holeH);
+
+        bctx.globalCompositeOperation = 'destination-in';
+        bctx.drawImage(maskCanvas, 0, 0);
+
+        pctx.drawImage(blurCanvas, 0, 0);
+
+        // 人像視覺微暗角聚攏
+        const vigGrad = pctx.createRadialGradient(
+          holeW * 0.5, holeH * 0.48, holeW * 0.32,
+          holeW * 0.5, holeH * 0.48, holeW * 0.65
+        );
+        vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+        vigGrad.addColorStop(1, 'rgba(40,20,10,0.18)');
+        pctx.fillStyle = vigGrad;
+        pctx.fillRect(0, 0, holeW, holeH);
+      }
+
+      // 4. 將相片繪製至合成畫布透空區 (6px 出血邊緣防止縫隙)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(holeX - 6, holeY - 6, holeW + 12, holeH + 12);
+      ctx.clip();
+      ctx.drawImage(photoCanvas, holeX, holeY, holeW, holeH);
       ctx.restore();
 
-      // Draw outer Frame Overlay on top
+      // 5. 繪製上層高解析圖框
       ctx.drawImage(frameImg, 0, 0, cw, ch);
 
-      // 3. Export to High-res DataURL & Blob
+      // 6. 輸出高畫質 JPEG
       const dataUrl = synthesisCanvas.toDataURL('image/jpeg', 0.92);
       STATE.capturedDataUrl = dataUrl;
       resultImagePreview.src = dataUrl;
+      return dataUrl;
+    }
 
-      // Switch to Result View
+    // --- Take Photo Sequence ---
+    async function takePhoto() {
+      // 1. 快門閃光與音效
+      flashOverlay.classList.add('shutter-flash');
+      setTimeout(() => flashOverlay.classList.remove('shutter-flash'), 350);
+      playShutterSound();
+
+      // 2. 擷取原始相機影像存至 rawCaptureCanvas
+      const sourceEl = STATE.demoImage || videoPreview;
+      const vw = sourceEl.videoWidth || sourceEl.naturalWidth || 1920;
+      const vh = sourceEl.videoHeight || sourceEl.naturalHeight || 1080;
+
+      const rawCanvas = document.createElement('canvas');
+      rawCanvas.width = vw;
+      rawCanvas.height = vh;
+      const rawCtx = rawCanvas.getContext('2d');
+      if (STATE.isMirror) {
+        rawCtx.translate(vw, 0);
+        rawCtx.scale(-1, 1);
+      }
+      rawCtx.drawImage(sourceEl, 0, 0, vw, vh);
+      STATE.rawCaptureCanvas = rawCanvas;
+
+      // 預設為微美肌風格（讓長輩一拍照臉色就紅潤有精神！）
+      STATE.selectedStyle = 'beauty';
+      updateStyleButtonsUI();
+      updateResultFrameButtonsUI();
+
+      // 3. 即時合成 1800 x 1200 4x6 成果照
+      const dataUrl = await renderSynthesizedPhoto();
+
+      // 切換至成果預覽畫面
       captureSection.classList.add('hidden');
       resultSection.classList.remove('hidden');
 
-      // Trigger Confetti Celebration!
+      // 繽紛紙花慶祝結業
       try {
         confetti({
           particleCount: 80,
@@ -649,11 +911,22 @@
         });
       } catch (e) {}
 
-      // Start Cloud Upload & QR Code Generation
+      // 開始雲端上傳與 QR Code 生成
       processQRCode(dataUrl);
 
-      // Start Auto Reset Timer (45s)
+      // 倒數 45 秒自動重設
       startAutoResetTimer(45);
+    }
+
+    // --- Debounced Cloud Upload Handler (When switching style/frame) ---
+    function scheduleCloudUpload() {
+      uploadStatus.innerHTML = '<span class="animate-spin text-base">⏳</span> 效果已套用，正在同步雲端與 QR Code...';
+      if (STATE.uploadDebounceTimer) clearTimeout(STATE.uploadDebounceTimer);
+      STATE.uploadDebounceTimer = setTimeout(() => {
+        if (STATE.capturedDataUrl) {
+          processQRCode(STATE.capturedDataUrl);
+        }
+      }, 700);
     }
 
     // --- QR Code & Upload Handler ---
@@ -691,9 +964,7 @@
       }
 
       // Fallback Demo Mode (or when offline)
-      // Generates QR Code that points to current page with image hash, or direct download link
       uploadStatus.innerHTML = '<span class="text-amber-800">✨ 預覽模式：手機掃碼或點擊下方下載</span>';
-      // In local mode, encode download notice or local reference
       renderQRCode(window.location.href);
     }
 
@@ -713,7 +984,7 @@
     btnSaveToDevice.addEventListener('click', () => {
       if (!STATE.capturedDataUrl) return;
       const link = document.createElement('a');
-      link.download = `外埔長青學院結業典禮_${Date.now()}.jpg`;
+      link.download = `2026外埔長青學苑結業典禮_${Date.now()}.jpg`;
       link.href = STATE.capturedDataUrl;
       link.click();
     });
