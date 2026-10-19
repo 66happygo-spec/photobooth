@@ -99,10 +99,29 @@
           <span id="countdownText" class="text-9xl md:text-[14rem] font-black text-amber-400 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] animate-ping">3</span>
         </div>
 
-        <!-- Camera Status Indicator Badge -->
-        <div id="cameraStatusBadge" class="absolute top-3 left-3 bg-black/60 backdrop-blur text-white text-xs px-3 py-1.5 rounded-full z-20 flex items-center gap-1.5 pointer-events-none">
-          <span class="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" id="camStatusDot"></span>
-          <span id="camStatusText">鏡頭連接中...</span>
+        <!-- Top Live Camera Status & Guide Badge -->
+        <div id="cameraStatusBadge" class="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none z-20">
+          <div class="bg-black/75 backdrop-blur text-white text-xs md:text-sm px-3.5 py-1.5 rounded-full flex items-center gap-2 shadow-lg border border-white/20">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-ping" id="camStatusDot"></span>
+            <span id="camStatusText" class="font-bold">🔴 即時動態鏡頭中（請將人物對齊框內）</span>
+          </div>
+          <button id="btnToggleGuide" type="button" class="pointer-events-auto bg-amber-500/90 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg flex items-center gap-1 transition active:scale-95">
+            <span>👤</span>
+            <span id="txtToggleGuide">顯示對齊框</span>
+          </button>
+        </div>
+
+        <!-- Silhouette & Alignment Guide Overlay (Help seniors align to center) -->
+        <div id="alignmentGuideOverlay" class="absolute inset-x-[12%] inset-y-[14%] border-2 border-dashed border-amber-300/60 rounded-3xl pointer-events-none z-15 flex flex-col items-center justify-between p-3 transition hidden">
+          <span class="bg-black/60 text-amber-200 text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur">
+            👉 請將人臉與上半身置於此虛線範圍內
+          </span>
+          <div class="flex items-center justify-center gap-6 text-white/40 text-4xl">
+            <span>👤</span>
+            <span class="text-5xl text-amber-300/50">👥</span>
+            <span>👤</span>
+          </div>
+          <span class="text-[11px] bg-black/60 text-white/80 px-2 py-0.5 rounded-full">合照：2～5人並排於中央</span>
         </div>
 
         <!-- Tap-To-Start / Unmute / Reconnect Overlay (shows when video is paused or stream not active) -->
@@ -147,41 +166,49 @@
       </div>
 
       <!-- Viewfinder Direct Utility Toolbar -->
-      <div class="mt-3 flex flex-wrap items-center justify-center gap-2.5 w-full text-xs md:text-sm font-bold">
-        <button id="btnRestartCam" type="button" class="bg-stone-800/80 hover:bg-stone-900 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+      <div class="mt-3 flex flex-wrap items-center justify-center gap-2 w-full text-xs md:text-sm font-bold">
+        <button id="btnRestartCam" type="button" class="bg-stone-800/80 hover:bg-stone-900 active:scale-95 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
           <span>📷</span>
-          <span>啟動/重啟相機</span>
+          <span>重整鏡頭</span>
         </button>
         
-        <button id="btnSwitchCamDirect" type="button" class="bg-amber-700/80 hover:bg-amber-800 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+        <button id="btnSwitchCamDirect" type="button" class="bg-amber-700/80 hover:bg-amber-800 active:scale-95 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
           <span>🔄</span>
-          <span id="txtSwitchCam">切換鏡頭 (前/後鏡頭)</span>
+          <span id="txtSwitchCam">切換鏡頭</span>
         </button>
         
-        <button id="btnUsePresetDemo" type="button" class="bg-teal-700/80 hover:bg-teal-800 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
+        <!-- Framing Scale Adjustment (Zoom In / Out for close-up webcam alignment) -->
+        <div class="flex items-center bg-stone-800/80 text-white rounded-xl p-1 shadow">
+          <span class="px-2 text-stone-300">取景視野：</span>
+          <button id="btnFitContain" type="button" class="px-2.5 py-1 rounded-lg transition text-stone-300 hover:text-white">📐 廣角全身</button>
+          <button id="btnFitCover" type="button" class="px-2.5 py-1 rounded-lg bg-amber-600 text-white shadow font-bold">🖼️ 標準填滿</button>
+        </div>
+
+        <button id="btnUsePresetDemo" type="button" class="bg-teal-700/80 hover:bg-teal-800 active:scale-95 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 shadow transition">
           <span>🌟</span>
-          <span>載入示範照片測試</span>
+          <span>示範照測試</span>
         </button>
 
-        <label class="bg-stone-600/80 hover:bg-stone-700 active:scale-95 text-white px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow cursor-pointer transition">
+        <label class="bg-stone-600/80 hover:bg-stone-700 active:scale-95 text-white px-3 py-2 rounded-xl flex items-center gap-1.5 shadow cursor-pointer transition">
           <span>📁</span>
-          <span>上傳相片測試</span>
+          <span>上傳相片</span>
           <input type="file" id="inputCustomPhoto" accept="image/*" class="hidden">
         </label>
       </div>
 
       <!-- Live Controls (Shutter Button & Countdown Options) -->
-      <div id="liveControls" class="mt-6 flex flex-col md:flex-row items-center justify-center gap-6 w-full">
-        <!-- Countdown Seconds Toggle (3s and 5s with cute voice) -->
-        <div class="flex items-center bg-amber-100 border border-amber-300 rounded-2xl p-1.5 shadow-sm text-base font-medium">
-          <span class="px-3 text-amber-900 font-bold flex items-center gap-1.5">
+      <div id="liveControls" class="mt-5 flex flex-col md:flex-row items-center justify-center gap-5 w-full">
+        <!-- Countdown Seconds Toggle (3s, 5s default, 10s with cute voice) -->
+        <div class="flex items-center bg-amber-100 border border-amber-300 rounded-2xl p-1.5 shadow-sm text-sm font-medium">
+          <span class="px-2.5 text-amber-900 font-bold flex items-center gap-1">
             <span>⏱️</span>
             <span>倒數：</span>
           </span>
-          <button data-seconds="3" class="btn-timer px-5 py-2.5 rounded-xl bg-amber-600 text-white font-bold shadow transition">3 秒</button>
-          <button data-seconds="5" class="btn-timer px-5 py-2.5 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">5 秒</button>
-          <span class="text-xs text-amber-800 font-bold bg-amber-200/90 px-2.5 py-1.5 rounded-xl ml-1 hidden sm:inline-flex items-center gap-1">
-            <span>🎙️</span> 可愛童音播報
+          <button data-seconds="3" class="btn-timer px-3.5 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">3 秒</button>
+          <button data-seconds="5" class="btn-timer px-4 py-2 rounded-xl bg-amber-600 text-white font-bold shadow transition">5 秒 (推薦)</button>
+          <button data-seconds="10" class="btn-timer px-3.5 py-2 rounded-xl text-amber-800 hover:bg-amber-200 transition font-bold">10 秒</button>
+          <span class="text-xs text-amber-800 font-bold bg-amber-200/90 px-2 py-1.5 rounded-xl ml-1 hidden sm:inline-flex items-center gap-1">
+            <span>🎙️</span> 童音播報
           </span>
         </div>
 
@@ -229,6 +256,21 @@
         
         <!-- Left: Synthesized 4x6 Result Image & Style / Frame Toggles -->
         <div class="w-full lg:w-3/5 flex flex-col items-center">
+          <!-- Result Status Notice Banner -->
+          <div class="w-full bg-emerald-600 text-white px-3.5 py-2.5 rounded-2xl shadow-md mb-3 flex flex-col sm:flex-row items-center justify-between gap-2 border-2 border-emerald-400">
+            <div class="flex items-center gap-2 text-center sm:text-left">
+              <span class="text-xl">📸</span>
+              <div>
+                <p class="font-black text-xs md:text-sm">拍照完成！此為剛剛拍攝的【靜止相片成果】</p>
+                <p class="text-[11px] text-emerald-100">人物未對齊？點擊右側按鈕即可返回即時動態鏡頭重新對準！</p>
+              </div>
+            </div>
+            <button id="btnRetakeNotice" type="button" class="bg-amber-400 hover:bg-amber-300 text-amber-950 font-black px-3.5 py-1.5 rounded-xl text-xs shadow flex items-center gap-1 active:scale-95 transition whitespace-nowrap">
+              <span>🔄</span>
+              <span>返回重新對齊</span>
+            </button>
+          </div>
+
           <!-- 4x6 Output Preview Image -->
           <div class="relative w-full rounded-2xl overflow-hidden shadow-xl border-4 border-amber-200 aspect-[3/2] bg-stone-900">
             <img id="resultImagePreview" class="w-full h-full object-contain" alt="合成照片預覽">
@@ -406,7 +448,8 @@
   <script>
     // --- Application State ---
     const STATE = {
-      countdownSeconds: 3,
+      countdownSeconds: 5,
+      framingMode: 'contain', // 'contain' (wide angle, prevents cropping heads) | 'cover' (fill)
       selectedFrame: 'frames/frame_macaron_balloons.png',
       selectedStyle: 'beauty', // 'natural' | 'beauty' | 'portrait'
       stream: null,
@@ -1014,11 +1057,14 @@
       const pctx = photoCanvas.getContext('2d');
 
       const raw = STATE.rawCaptureCanvas;
-      const scale = Math.max(holeW / raw.width, holeH / raw.height);
+      // When in contain/wide mode, zoom out slightly so heads are not clipped by the top banner
+      const scale = (STATE.framingMode === 'contain')
+        ? Math.min(holeW / raw.width, holeH / raw.height) * 1.08
+        : Math.max(holeW / raw.width, holeH / raw.height);
       const dw = raw.width * scale;
       const dh = raw.height * scale;
       const dx = (holeW - dw) / 2;
-      const dy = (holeH - dh) / 2;
+      const dy = (STATE.framingMode === 'contain') ? ((holeH - dh) / 2 + 15) : ((holeH - dh) / 2);
 
       const style = STATE.selectedStyle || 'beauty';
 
@@ -1305,6 +1351,85 @@
       }
     });
 
+    // --- Result Banner Retake Button ---
+    document.getElementById('btnRetakeNotice')?.addEventListener('click', returnToCapture);
+
+    // --- Silhouette Alignment Guide Toggle ---
+    let isGuideVisible = false;
+    document.getElementById('btnToggleGuide')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      isGuideVisible = !isGuideVisible;
+      const guide = document.getElementById('alignmentGuideOverlay');
+      const txt = document.getElementById('txtToggleGuide');
+      if (isGuideVisible) {
+        guide?.classList.remove('hidden');
+        if (txt) txt.innerText = '隱藏對齊框';
+      } else {
+        guide?.classList.add('hidden');
+        if (txt) txt.innerText = '顯示對齊框';
+      }
+    });
+
+    // --- Framing Scale Adjustment (Zoom / Distance Mode) ---
+    function updateFramingModeUI() {
+      const btnContain = document.getElementById('btnFitContain');
+      const btnCover = document.getElementById('btnFitCover');
+      if (STATE.framingMode === 'contain') {
+        videoPreview.style.objectFit = 'contain';
+        videoPreview.style.transform = (STATE.isMirror ? 'scale(-1, 1)' : 'none') + ' scale(0.96) translateY(8px)';
+        if (btnContain && btnCover) {
+          btnContain.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white shadow font-bold';
+          btnCover.className = 'px-2.5 py-1 rounded-lg transition text-stone-300 hover:text-white';
+        }
+      } else {
+        videoPreview.style.objectFit = 'cover';
+        videoPreview.style.transform = (STATE.isMirror ? 'scale(-1, 1)' : 'none');
+        if (btnContain && btnCover) {
+          btnCover.className = 'px-2.5 py-1 rounded-lg bg-amber-600 text-white shadow font-bold';
+          btnContain.className = 'px-2.5 py-1 rounded-lg transition text-stone-300 hover:text-white';
+        }
+      }
+    }
+
+    document.getElementById('btnFitContain')?.addEventListener('click', () => {
+      STATE.framingMode = 'contain';
+      updateFramingModeUI();
+    });
+    document.getElementById('btnFitCover')?.addEventListener('click', () => {
+      STATE.framingMode = 'cover';
+      updateFramingModeUI();
+    });
+
+    // --- Real-Time Video Freeze Watchdog ---
+    let lastVideoTime = -1;
+    let lastMotionTimestamp = Date.now();
+
+    videoPreview.addEventListener('timeupdate', () => {
+      if (videoPreview.currentTime !== lastVideoTime) {
+        lastVideoTime = videoPreview.currentTime;
+        lastMotionTimestamp = Date.now();
+        const dot = document.getElementById('camStatusDot');
+        if (dot) {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-green-400 animate-ping';
+        }
+      }
+    });
+
+    setInterval(() => {
+      // Only monitor when in captureSection with camera stream
+      if (captureSection.classList.contains('hidden')) return;
+      if (STATE.demoImage || !STATE.stream) return;
+
+      const idleMs = Date.now() - lastMotionTimestamp;
+      if (idleMs > 2200 && !videoPreview.paused) {
+        console.warn('Video playback stalled or frozen, attempting auto-resume...');
+        const dot = document.getElementById('camStatusDot');
+        if (dot) dot.className = 'w-2.5 h-2.5 rounded-full bg-yellow-400 animate-pulse';
+        videoPreview.play().catch(() => showTapToStartOverlay());
+      }
+    }, 1000);
+
     // --- Settings Modal Logic ---
     btnOpenSettings.addEventListener('click', () => {
       inputCloudName.value = STATE.cloudName;
@@ -1337,6 +1462,7 @@
       inputCloudName.value = STATE.cloudName;
       inputUploadPreset.value = STATE.uploadPreset;
       bindTestPhotoUpload();
+      updateFramingModeUI();
       initCamera();
     });
   </script>
